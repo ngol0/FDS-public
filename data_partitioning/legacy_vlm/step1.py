@@ -146,19 +146,7 @@ def process_questions_batch(questions: List[List[Dict[str, Any]]], model, tokeni
             stream=False
         )
         
-        # Handle different possible return formats
-        if isinstance(res, tuple):
-            # If it returns (responses, context, _), take the first element
-            responses = res[0] if isinstance(res[0], list) else [res[0]]
-            print("Return (responses, context, _), case 1")
-        elif isinstance(res, list):
-            # If it directly returns a list of responses
-            responses = res
-            print("Return directly, case 2")
-        else:
-            # If it returns a single response for some reason
-            responses = [res]
-            print("Last case")
+        responses = res
         
         logger.info(f"Successfully processed batch of {len(questions)} questions")
         return responses
@@ -261,7 +249,7 @@ def save_to_json(path: str, data: Any) -> None:
         json.dump(data, f, indent=4)
     logger.info(f"Results saved to {path}")
 
-#================================= ENTIRE FLOW FOR STEP 1 ==========================
+#================================= ENTIRE FLOW FOR STEP 1 ====================================
 def process_dataset(args, model, tokenizer,
                     max_samples: int = 6, 
                     batch_size: int = 4,
@@ -313,9 +301,8 @@ def process_dataset(args, model, tokenizer,
     logger.info(f"Processing complete! Processed {len(all_results)} samples. Saved to {args.output_path}")
 
 if __name__ == "__main__":
-    print("Args set up correctly. Data dir: ", args.general_data_dir)
-
     """Main execution function."""
+    print("Args set up correctly. Data dir: ", args.general_data_dir)
      
     # Configuration
     model_dir = "/users/sbsh771/archive/vision-saved/minicpm26"
@@ -324,7 +311,7 @@ if __name__ == "__main__":
     model, tokenizer = load_model(model_dir, 'cuda', torch.bfloat16)
     
     # Process dataset
-    process_dataset(args=args, model=model, tokenizer=tokenizer, max_samples=50, batch_size=50)
+    process_dataset(args=args, model=model, tokenizer=tokenizer, max_samples=None, batch_size=50)
 
 
 
