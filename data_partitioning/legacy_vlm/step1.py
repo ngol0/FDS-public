@@ -34,8 +34,11 @@ def load_tiny_imagenet(group: str = "train") -> Tuple[Dataset, List[str]]:
     ds = load_dataset("zh-plus/tiny-imagenet")
     img_group = ds[group]
     label_names = img_group.features['label'].names
-        
-    return img_group, label_names
+
+    # Normalize to list[dict]
+    samples = [{"image": item["image"], "label": item["label"]} for item in img_group]
+
+    return samples, label_names
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
@@ -89,6 +92,7 @@ def prepare_batch_questions(data: Dataset, label_set: List[str],
     questions = []
     processed_count = 0
     
+    # # ---- For TinyImagenet -----
     for i, sample in enumerate(data):
         if max_samples and processed_count >= max_samples:
             break
@@ -268,6 +272,7 @@ def process_dataset(args, model, tokenizer,
     logger.info("Starting dataset processing...")
     
     # Load dataset
+    # ---- For TinyImagenet -----
     if args.dataset == "imagenet":
         logger.info("Dataset: TinyImagenet")
         data, label_names = load_tiny_imagenet(dataset_split)
