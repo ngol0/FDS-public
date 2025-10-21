@@ -20,7 +20,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 # print(">>> sys.path includes:", sys.path[-3:])
 
 # ------Load dataset func ----------
-@staticmethod
 def load_tiny_imagenet(group: str = "train") -> Tuple[Dataset, List[str]]:
     """
     Load TinyImageNet dataset.
@@ -246,14 +245,13 @@ def process_batch(batch_data: List[Dict[str, Any]], model, tokenizer,
     return results
 
 # STEP 5: Save results
-@staticmethod
 def save_to_json(path: str, data: Any) -> None:
     """Save data to JSON file."""
     with open(path, "w") as f:
         json.dump(data, f, indent=4)
     logger.info(f"Results saved to {path}")
 
-#================================= ENTIRE FLOW FOR STEP 1 ====================================
+#================================= ENTIRE FLOW FOR STEP 1 ========================================
 def process_dataset(args, model, tokenizer,
                     max_samples: int = 6, 
                     batch_size: int = 4,
@@ -276,9 +274,11 @@ def process_dataset(args, model, tokenizer,
     if args.dataset == "imagenet":
         logger.info("Dataset: TinyImagenet")
         data, label_names = load_tiny_imagenet(dataset_split)
+    #todo: add other dataset here:
+    #
     
     # Prepare questions
-    question = read_file_to_string(f"{args.specific_dataset_dir}/step1_prompt.txt")
+    question = read_file_to_string(args.step1_prompt_path)
     print("Preparing batch question.... Question: ", question)
     prepared_data = prepare_batch_questions(data, label_names, question, max_samples)
     
