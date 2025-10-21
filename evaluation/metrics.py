@@ -31,11 +31,12 @@ class ImagePathDataset(torch.utils.data.Dataset):
         return len(self.file_dataset)
 
     def __getitem__(self, i):
-        path = self.file_dataset[i]
-        img = Image.open(path).convert("RGB")
+        img_path, label = self.file_dataset[i]['image_path'], self.file_dataset[i]['label']
+        img = Image.open(img_path).convert("RGB")
+        label = torch.tensor(label)
         if self.transforms is not None:
             img = self.transforms(img)
-        return img
+        return img, label
 
 def FID_distance(dataset_list, model_name='InceptionV3', device=None, return_all=False, batch_size=50):
 
@@ -77,9 +78,9 @@ def FID_distance(dataset_list, model_name='InceptionV3', device=None, return_all
         activations = []
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False)
         with torch.no_grad():
-            for batch in dataloader:
-                batch = batch.to(device)
-                preds = model(batch)
+            for (image, label) in dataloader:
+                image = image.to(device)
+                preds = model(image)
                 activations.append(preds.cpu().numpy())
         return np.concatenate(activations, axis=0)
     
