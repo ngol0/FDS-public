@@ -15,7 +15,6 @@ from pathlib import Path
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import re
 
-
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,9 +27,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 # print(">>> sys.path includes:", sys.path[-3:])
 
 # --- Load captions from JSONL ---
-def load_data(jsonl_path: str) -> List[Dict]:
+def load_data(json_path: str) -> List[Dict]:
     """Load data from JSONL file."""
-    with open(jsonl_path, 'r', encoding='utf-8') as f:
+    with open(json_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 # Read from from txt file
@@ -40,7 +39,7 @@ def read_file_to_string(filename):
     return content
 
 # ------------------------- Step 2 funcs ------------------------------------------------------
-# ---- Step 1: Prepare captions in batch----
+# ---- Step 1: Prepare captions in batch ----
 def format_prompt(caption: List[str]) -> str:
     """Format captions into a prompt asking for exact description."""
     return f'''
@@ -102,7 +101,7 @@ def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16)
     """
     # Load data
     jsonl_path=args.step1_result_path
-    output_path=args.step2a_result_path
+    output_path=args.step3_result_path
 
     data = load_data(jsonl_path)
     logger.info(f"Loaded {len(data)} items")
@@ -113,7 +112,9 @@ def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16)
         batch = data[i:i+inference_batch_size]
         
         # Build prompts for this batch
-        system_prompt = read_file_to_string(args.step2a_prompt_path)
+        class_list = ["landscape", "human", "animal", "plant", "inanimate object", "unknown"]
+        system_prompt = read_file_to_string(args.step3_prompt_path)
+        system_prompt = system_prompt.replace("[__CLASSES__]", str(class_list))
         prompts = [
             build_chat_prompt(model, tokenizer, system_prompt, item["description"]) for item in batch]
         
@@ -124,7 +125,7 @@ def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16)
         
         # Update descriptions with LLM responses
         for j, response in enumerate(responses):
-            batch[j]["description"] = response
+            batch[j]["class"] = response
         
         print(f"  - Completed {min(i + inference_batch_size, len(data))}/{len(data)} items\n")
     

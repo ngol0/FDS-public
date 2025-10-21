@@ -80,7 +80,7 @@ def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 
     responses = []
     for output in outputs:
         response = tokenizer.decode(output, skip_special_tokens=True)
-        print("RESPONSE: ", response)
+        #print("RESPONSE: ", response)
         marker = "assistant"  
         idx = response.find(marker)
         if idx != -1:
