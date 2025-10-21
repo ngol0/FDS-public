@@ -1,19 +1,13 @@
 import torch
 import os
 import json
-from torchvision import datasets
-from PIL import Image
-from datasets import Dataset, load_dataset
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict
 import logging
 import sys, os
-import shutil
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
-import random
 from pathlib import Path
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import re
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
@@ -105,6 +99,11 @@ def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16)
 
     data = load_data(jsonl_path)
     logger.info(f"Loaded {len(data)} items")
+
+    # Load prompt from txt file
+    system_prompt = read_file_to_string(args.step3_prompt_path)
+    class_list = ["landscape", "human", "animal", "plant", "inanimate object", "unknown"]
+    system_prompt = system_prompt.replace("[__CLASSES__]", str(class_list))
     
     # Process in batches
     logger.info("Starting LLM inference...")
@@ -112,9 +111,6 @@ def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16)
         batch = data[i:i+inference_batch_size]
         
         # Build prompts for this batch
-        class_list = ["landscape", "human", "animal", "plant", "inanimate object", "unknown"]
-        system_prompt = read_file_to_string(args.step3_prompt_path)
-        system_prompt = system_prompt.replace("[__CLASSES__]", str(class_list))
         prompts = [
             build_chat_prompt(model, tokenizer, system_prompt, item["description"]) for item in batch]
         

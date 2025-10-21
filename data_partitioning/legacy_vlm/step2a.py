@@ -1,19 +1,13 @@
 import torch
 import os
 import json
-from torchvision import datasets
-from PIL import Image
-from datasets import Dataset, load_dataset
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict
 import logging
 import sys, os
-import shutil
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
-import random
 from pathlib import Path
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import re
 
 
 # ----- Configure logging -----------------
@@ -44,7 +38,7 @@ def read_file_to_string(filename):
 def format_prompt(caption: List[str]) -> str:
     """Format captions into a prompt asking for exact description."""
     return f'''
-    Image description: {caption}. 
+    Image description: "{caption}" 
     Your response:
 '''
 
@@ -107,13 +101,14 @@ def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16)
     data = load_data(jsonl_path)
     logger.info(f"Loaded {len(data)} items")
     
+    system_prompt = read_file_to_string(args.step2a_prompt_path)
+    
     # Process in batches
     logger.info("Starting LLM inference...")
     for i in range(0, len(data), inference_batch_size):
         batch = data[i:i+inference_batch_size]
         
         # Build prompts for this batch
-        system_prompt = read_file_to_string(args.step2a_prompt_path)
         prompts = [
             build_chat_prompt(model, tokenizer, system_prompt, item["description"]) for item in batch]
         

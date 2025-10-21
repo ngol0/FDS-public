@@ -2,13 +2,10 @@ import torch
 from transformers import AutoModel, AutoTokenizer
 import os
 import json
-from torchvision import datasets
-from PIL import Image
 from datasets import Dataset, load_dataset
 from typing import List, Dict, Tuple, Any
 import logging
 import sys, os
-import shutil
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
 
