@@ -1,0 +1,23 @@
+Answer 1: Animal
+Reason 1: This category includes all the living organisms in the dataset, such as mammals (Dog, Cat, Bear, Elephant, Monkey, Panda), birds (Bird, Penguin), insects (Butterfly, Beetle, Ladybug, Bee, Jellyfish), and amphibians (Frog).
+
+Answer 2: Man-made Object
+Reason 2: This category includes all the man-made objects in the dataset, such as vehicles (Car, Bus, Truck, Train, Boat, Tractor), furniture (Table, Chair, Teapot, Cup, Bowl), and other objects (Plate, Bottle, Mirror, Sign, Flag, Lamp, Obelisk, Archway, Fence).
+
+Answer 3: Food
+Reason 3: This category includes all the edible items in the dataset, such as Pizza, Cake, Banana, Orange.
+
+Answer 4: Landmark
+Reason 4: This category includes all the structures that are typically found in a specific location, such as a building (House, Lighthouse), a natural feature (Mountain), or a man-made structure (Bridge, Obelisk).
+
+Answer 5: Fabric/Textile
+Reason 5: This category includes all the fabric-related items in the dataset, such as Fabric.
+
+Answer 6: Vehicle
+Reason 6: This category includes all the vehicles in the dataset, such as Car, Bus, Truck, Train, Boat, Tractor.
+
+Answer 7: Animal Habitat
+Reason 7: This category includes all the items that are typically found in a specific environment, such as a Tree, Leaf, and Mountain.
+
+Answer 8: Toy
+Reason 8: This category includes all the items that are typically used for entertainment or play, such as Teddy, Ball, Phone, Remote.
