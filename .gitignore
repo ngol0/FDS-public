@@ -1,0 +1,15 @@
+# python
+__pycache__
+.pyc
+
+# VSCode
+.vscode/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/

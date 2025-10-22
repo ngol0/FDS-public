@@ -1,7 +1,7 @@
 import numpy as np
 import json
 
-from ..base_splitter import BaseDatasetSplitter
+from .base_splitter import BaseDatasetSplitter
 
 class DirichletSplitter(BaseDatasetSplitter):
     def __init__(self, dataset, n_clients, heterogeneity=0.5, seed=None):
