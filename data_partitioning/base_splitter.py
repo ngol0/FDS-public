@@ -77,7 +77,7 @@ class BaseDatasetSplitter(ABC):
     
     def get_client_splits(self) -> DatasetSplits:
         if self.splits is None:
-            self._compute_client_splits()
+            self.splits = self._compute_client_splits()
         return self.splits  # type: ignore
 
     def store_client_splits(self, filename: str, format: str = "json") -> None:

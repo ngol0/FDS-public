@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
-from .base_splitter import BaseDatasetSplitter, DatasetSplits, ClientSplit
-from .dataset import BaseDataset
+from base_splitter import BaseDatasetSplitter, DatasetSplits, ClientSplit
+from dataset import BaseDataset
 
 
 class RandomSplitter(BaseDatasetSplitter):
@@ -32,7 +32,7 @@ class RandomSplitter(BaseDatasetSplitter):
         Returns:
             DatasetSplits dictionary with client splits and optional global validation
         """
-
+        print("Performing random splitting of the dataset...")
         # Seed already set in base class init
 
         splits: DatasetSplits = {
@@ -63,7 +63,8 @@ class RandomSplitter(BaseDatasetSplitter):
             client_train_data = self._load_dataset_samples(self.train_dataset, indices.tolist())
 
             splits["clients"][client_id] = ClientSplit(train=client_train_data, val=[])
-
+        
+        print("Random splitting with global validation completed.")
         return splits
 
     def _split_with_local_val(self, client_train_indices: List[np.ndarray], splits: DatasetSplits) -> DatasetSplits:
@@ -80,7 +81,7 @@ class RandomSplitter(BaseDatasetSplitter):
             client_val_data = self._load_dataset_samples(self.val_dataset, val_indices.tolist())
 
             splits["clients"][client_id] = ClientSplit(train=client_train_data, val=client_val_data)
-
+        print("Random splitting with local validation completed.")
         return splits
 
     def _split_without_val(self, client_train_indices: List[np.ndarray], splits: DatasetSplits) -> DatasetSplits:
@@ -88,5 +89,21 @@ class RandomSplitter(BaseDatasetSplitter):
             client_id = f"client_{i}"
             client_train_data = self._load_dataset_samples(self.train_dataset, train_indices.tolist())
             splits["clients"][client_id] = ClientSplit(train=client_train_data, val=[])
-
+        print("Random splitting without validation completed.")
         return splits
+
+    
+if __name__ == "__main__":
+    # Test the RandomSplitter with Tiny ImageNet
+    train_dataset = BaseDataset("tiny_imagenet", "/users/adcw447/gtai/FDS/", "train")
+    val_dataset = BaseDataset("tiny_imagenet", "/users/adcw447/gtai/FDS/", "val")
+    print("Testing with global validation set:")
+    splitter = RandomSplitter(train_dataset, val_dataset, n_clients=5, heterogeneity=0.5, valset_type="global", seed=42)
+    print(splitter.get_split_summary())
+    print("\nTesting with local validation sets:")
+    splitter = RandomSplitter(train_dataset, val_dataset, n_clients=5, heterogeneity=0.5, valset_type="local", seed=42)
+    print(splitter.get_split_summary())
+    print("\nTesting without validation sets:")
+    splitter = RandomSplitter(train_dataset, None, n_clients=5, heterogeneity=0.5, valset_type="none", seed=42)
+    print(splitter.get_split_summary())
+    
