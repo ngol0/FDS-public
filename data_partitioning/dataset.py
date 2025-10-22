@@ -1,8 +1,41 @@
 import os
 import json
 from torch.utils.data import Dataset
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 from pathlib import Path
+from PIL import Image
+
+
+class ClassificationDataset(Dataset):
+    def __init__(self, split_data: List[Dict[str, Any]], transform=None):
+        self.samples = split_data
+        self.transform = transform
+
+    def __getitem__(self, idx):
+        sample = self.samples[idx]
+        image = Image.open(sample["image_path"]).convert("RGB")
+        label = sample["label"]
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image, label
+
+
+class SegmentationDataset(Dataset):
+    def __init__(self, split_data: List[Dict[str, Any]], transform=None):
+        self.samples = split_data  # [{"image": img_path, "label": mask_path}, ...]
+        self.transform = transform
+
+    def __getitem__(self, idx):
+        sample = self.samples[idx]
+        image = Image.open(sample["image_path"]).convert("RGB")
+        mask = Image.open(sample["mask_path"])
+
+        if self.transform:
+            image, mask = self.transform(image, mask)
+
+        return image, mask
 
 
 class BaseDataset(Dataset):
