@@ -1,16 +1,13 @@
 import torch
 import os
 import json
-from torchvision import datasets
-from PIL import Image
-from datasets import Dataset, load_dataset
+from utils import model_loader
 from typing import List
 import logging
 import sys, os
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
 from pathlib import Path
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
@@ -76,8 +73,8 @@ def build_chat_prompt(model, tokenizer, system_prompt: str, labels, num_class) -
     return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
 # --- Step 2: Query LLaMA model ---
-def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 512) -> List[str]:
-    """Process multiple prompts in one batch."""
+def query_llm(model, tokenizer, prompts: List[str], max_new_tokens: int = 512) -> List[str]:
+    """Process one prompt."""
     inputs = tokenizer(
         prompts, 
         return_tensors="pt", 
@@ -106,23 +103,16 @@ def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 
         return "Can't find marker!"
 
 # ------ Run flow ------
-def process_labels(args):
+def main(model, tokenizer):
     """
-    Process all descriptions and save results.
-    
-    Args:
-        jsonl_path: Input JSONL file path
-        output_path: Output JSON file path
-        inference_batch_size: Number of descriptions to process simultaneously
+    Process all labels and save results.
     """
-    model = args.model
-    tokenizer = args.tokenizer
 
     # Load data
-    jsonl_path=args.step2a_result_path
+    input_file=args.step2a_result_path
 
     # Usage
-    label_counts = post_process(jsonl_path)
+    label_counts = post_process(input_file)
     #print(label_counts)
 
     logger.info(f"Loaded {len(label_counts)} items")
@@ -142,7 +132,7 @@ def process_labels(args):
     system_prompt = system_prompt.replace("[__LEN__]", str(len(label_counts)))
 
     prompt = build_chat_prompt(model, tokenizer, system_prompt, label_counts, args.num_classes)
-    response = query_llm_batch(model, tokenizer, prompt, max_new_tokens=500)
+    response = query_llm(model, tokenizer, prompt, max_new_tokens=500)
     print(response)
 
     # save results
@@ -154,4 +144,7 @@ def process_labels(args):
 # Usage
 if __name__ == "__main__":
     # ----- Run flow -----
-    process_labels(args=args)
+    model = model_loader.llm_model
+    tokenizer = model_loader.llm_tokenizer
+
+    main(model=model, tokenizer=tokenizer)

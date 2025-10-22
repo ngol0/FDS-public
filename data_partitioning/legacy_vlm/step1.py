@@ -7,6 +7,7 @@ import logging
 import sys, os
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
+from utils import model_loader
 
 # ---- Set up directory path ----
 env_path = find_dotenv()
@@ -227,25 +228,19 @@ def save_to_json(path: str, data: Any) -> None:
     logger.info(f"Results saved to {path}")
 
 #================================= ENTIRE FLOW FOR STEP 1 ========================================
-def process_dataset(args, 
-                    max_samples: int = 6, 
-                    batch_size: int = 4,
-                    dataset_split: str = "valid") -> None:
+def main(model, tokenizer,
+        max_samples: int = 6, 
+        batch_size: int = 4,
+        dataset_split: str = "valid") -> None:
     """
     Main method to process the entire dataset.
     
     Args:
-        output_dir: Output directory for results
-        json_filename: Name of the JSON output file
-        question: Question to ask about images
+        model, tokenizer: VLM
         max_samples: Maximum number of samples to process
         batch_size: Number of samples to process in each batch
         dataset_split: Dataset split to use
     """
-
-    model = args.model
-    tokenizer = args.tokenizer
-    
     logger.info("Starting dataset processing...")
     
     # Load dataset
@@ -284,11 +279,15 @@ def process_dataset(args,
     save_to_json(json_path, all_results)
     logger.info(f"Processing complete! Processed {len(all_results)} samples. Saved to {args.output_path}")
 
+
 if __name__ == "__main__":
     """Main execution function."""
+
+    model = model_loader.vlm_model
+    tokenizer = model_loader.vlm_tokenizer
     
     # Process dataset
-    process_dataset(args=args, max_samples=None, batch_size=50)
+    main(model=model, tokenizer=tokenizer, max_samples=None, batch_size=50)
 
 
 

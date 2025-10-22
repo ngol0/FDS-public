@@ -7,6 +7,7 @@ import sys, os
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
 from pathlib import Path
+from utils import model_loader
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
@@ -83,18 +84,13 @@ def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 
     return responses
 
 # ------ Run flow ------
-def process_descriptions(args, inference_batch_size: int = 16):
+def main(model, tokenizer, inference_batch_size: int = 16):
     """
-    Process all descriptions and save results.
+    Classification using caption + class list and save results.
     
     Args:
-        jsonl_path: Input JSONL file path
-        output_path: Output JSON file path
         inference_batch_size: Number of descriptions to process simultaneously
     """
-
-    model = args.model
-    tokenizer = args.tokenizer
 
     # Load data
     jsonl_path=args.step1_result_path
@@ -136,6 +132,8 @@ def process_descriptions(args, inference_batch_size: int = 16):
 
 # Usage
 if __name__ == "__main__":
-    
     # ----- Run flow -----
-    process_descriptions(args=args, inference_batch_size=64)
+    model = model_loader.llm_model
+    tokenizer = model_loader.llm_tokenizer
+
+    main(model=model, tokenizer=tokenizer, inference_batch_size=64)
