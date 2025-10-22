@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
-from ..base_splitter import BaseDatasetSplitter, DatasetSplits, ClientSplit
-from ..dataset import BaseDataset
+from .base_splitter import BaseDatasetSplitter, DatasetSplits, ClientSplit
+from .dataset import BaseDataset
 
 
 class RandomSplitter(BaseDatasetSplitter):
