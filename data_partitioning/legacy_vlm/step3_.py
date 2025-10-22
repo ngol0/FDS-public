@@ -1,19 +1,13 @@
 import torch
 import os
 import json
-from torchvision import datasets
-from PIL import Image
-from datasets import Dataset, load_dataset
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict
 import logging
 import sys, os
-import shutil
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
-import random
 from pathlib import Path
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import re
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +25,17 @@ def load_data(json_path: str) -> List[Dict]:
     """Load data from JSONL file."""
     with open(json_path, 'r', encoding='utf-8') as f:
         return json.load(f)
+
+def read_class_list(step2b_result_path):
+    with open(step2b_result_path, 'r') as file:
+        file_read = file.readlines()
+        class_list = []
+        for lab in file_read:
+            if "Reason" not in lab and lab.strip() != "" and ":" in lab:
+                lab = lab.split(":")[1].strip().lower()
+                class_list.append(lab)
+
+    return class_list
 
 # Read from from txt file
 def read_file_to_string(filename):
@@ -112,7 +117,7 @@ def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16)
         batch = data[i:i+inference_batch_size]
         
         # Build prompts for this batch
-        class_list = ["landscape", "human", "animal", "plant", "inanimate object", "unknown"]
+        class_list = read_class_list(args.step2b_result_path)
         system_prompt = read_file_to_string(args.step3_prompt_path)
         system_prompt = system_prompt.replace("[__CLASSES__]", str(class_list))
         prompts = [

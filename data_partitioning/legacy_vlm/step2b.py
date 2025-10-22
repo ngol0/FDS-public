@@ -4,17 +4,13 @@ import json
 from torchvision import datasets
 from PIL import Image
 from datasets import Dataset, load_dataset
-from typing import List, Dict, Tuple, Any
+from typing import List
 import logging
 import sys, os
-import shutil
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
-import random
 from pathlib import Path
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import re
-
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
@@ -28,10 +24,32 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 # print(">>> sys.path includes:", sys.path[-3:])
 
 # --- Load captions from JSONL ---
-def load_data(jsonl_path: str) -> List[Dict]:
-    """Load data from JSONL file."""
-    with open(jsonl_path, 'r', encoding='utf-8') as f:
-        return json.load(f)
+# --- Step 1: Load captions from JSONL ---
+def post_process(json_path: str):
+    """
+    Load labels from JSON and count their occurrences.
+    
+    Args:
+        json_path: Path to JSON file with format [{"label": "...", ...}, ...]
+    
+    Returns:
+        Dictionary with label counts
+    """
+    answer_list = {}
+    
+    with open(json_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    for item in data:
+        label = item["label"]
+        
+        # Count occurrences
+        if label not in answer_list:
+            answer_list[label] = 1
+        else:
+            answer_list[label] += 1
+    
+    return answer_list
 
 # Read from from txt file
 def read_file_to_string(filename):
@@ -41,18 +59,19 @@ def read_file_to_string(filename):
 
 # ------------------------- Step 2 funcs ------------------------------------------------------
 # ---- Step 1: Prepare captions in batch----
-def format_prompt(caption: List[str]) -> str:
+def format_prompt(labels, num_of_class) -> str:
     """Format captions into a prompt asking for exact description."""
     return f'''
-    Image description: {caption}. 
+    List of labels: {labels}. 
+    Num_classes: {num_of_class}
     Your response:
 '''
 
 # --- Build chat prompt using messages format ---
-def build_chat_prompt(model, tokenizer, system_prompt: str, captions: str) -> str:
+def build_chat_prompt(model, tokenizer, system_prompt: str, labels, num_class) -> str:
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": format_prompt(captions)}
+        {"role": "user", "content": format_prompt(labels, num_class)}
     ]
     return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
@@ -77,21 +96,17 @@ def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 
             eos_token_id=tokenizer.eos_token_id,
         )
     
-    responses = []
-    for output in outputs:
-        response = tokenizer.decode(output, skip_special_tokens=True)
-        #print("RESPONSE: ", response)
-        marker = "assistant"  
-        idx = response.find(marker)
-        if idx != -1:
-            responses.append(response[idx + len(marker):].strip())
-        else:
-            responses.append(response.strip())
-    
-    return responses
+    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    #print("RESPONSE: ", response)
+    marker = "Your response:assistant"
+    idx = response.find(marker)
+    if idx != -1:
+        return response[idx + len(marker):].strip()
+    else:
+        return "Can't find marker!"
 
 # ------ Run flow ------
-def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16):
+def process_labels(model, tokenizer, args):
     """
     Process all descriptions and save results.
     
@@ -101,38 +116,37 @@ def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16)
         inference_batch_size: Number of descriptions to process simultaneously
     """
     # Load data
-    jsonl_path=args.step1_result_path
-    output_path=args.step2a_result_path
+    jsonl_path=args.step2a_result_path
 
-    data = load_data(jsonl_path)
-    logger.info(f"Loaded {len(data)} items")
+    # Usage
+    label_counts = post_process(jsonl_path)
+    #print(label_counts)
+
+    logger.info(f"Loaded {len(label_counts)} items")
+
+    # 
+    # threshold
+    if args.num_classes == 20:
+        threshold = 35
+    else:
+        threshold = 30
+    label_counts = dict(sorted({k: v for k, v in label_counts.items() if v > threshold}.items(), key=lambda item: item[1], reverse=True))
+
+    print("Post-processed dictionary: ", label_counts)
     
-    # Process in batches
-    logger.info("Starting LLM inference...")
-    for i in range(0, len(data), inference_batch_size):
-        batch = data[i:i+inference_batch_size]
-        
-        # Build prompts for this batch
-        system_prompt = read_file_to_string(args.step2a_prompt_path)
-        prompts = [
-            build_chat_prompt(model, tokenizer, system_prompt, item["description"]) for item in batch]
-        
-        print(f"Processing batch {i // inference_batch_size + 1}/{(len(data) + inference_batch_size - 1) // inference_batch_size}")
-        
-        # Run batch inference
-        responses = query_llm_batch(model, tokenizer, prompts, max_new_tokens=100)
-        
-        # Update descriptions with LLM responses
-        for j, response in enumerate(responses):
-            batch[j]["description"] = response
-        
-        print(f"  - Completed {min(i + inference_batch_size, len(data))}/{len(data)} items\n")
+    system_prompt = read_file_to_string(args.step2b_prompt_path)
+    system_prompt = system_prompt.replace("[__NUM_CLASSES_CLUSTER__]", str(args.num_classes))
+    system_prompt = system_prompt.replace("[__LEN__]", str(len(label_counts)))
+
+    prompt = build_chat_prompt(model, tokenizer, system_prompt, label_counts, args.num_classes)
+    response = query_llm_batch(model, tokenizer, prompt, max_new_tokens=500)
+    print(response)
+
+    # save results
+    with open(args.step2b_result_path, 'w', encoding='utf-8') as file:
+        file.write(response)
     
-    # Save results
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
-    
-    logger.info(f"Results saved to {output_path}")
+    logger.info(f"Results saved to {args.step2b_result_path}")
 
 # Usage
 if __name__ == "__main__":
@@ -147,9 +161,4 @@ if __name__ == "__main__":
         tokenizer.pad_token_id = tokenizer.eos_token_id
 
     # ----- Run flow -----
-    process_descriptions(
-        model=model, 
-        tokenizer=tokenizer,
-        args=args,
-        inference_batch_size=64
-    )
+    process_labels(model=model, tokenizer=tokenizer, args=args)

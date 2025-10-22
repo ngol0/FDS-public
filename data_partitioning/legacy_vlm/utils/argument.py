@@ -39,7 +39,7 @@ args.output_path = args.specific_dataset_dir + f"/{args.exp_name}"
 Path(args.output_path).mkdir(parents=True, exist_ok=True)
 args.step1_result_path = f"{args.output_path}/step1_result.jsonl"
 args.step2a_result_path = f"{args.output_path}/step2a_result.json"
-args.step2b_result_path = f"{args.output_path}/step2b_result.json"
+args.step2b_result_path = f"{args.output_path}/step2b_result.txt"
 args.step3_result_path = f"{args.output_path}/step3_result.json"
 
 # ----- For copying ----
@@ -48,6 +48,8 @@ args.step1_prompt_path = args.specific_dataset_dir + f"/step1_prompt"
 args.step1_prompt_path += ".txt"
 args.step2a_prompt_path = args.specific_dataset_dir + f"/step2a_prompt"
 args.step2a_prompt_path += ".txt"
+args.step2b_prompt_path = args.specific_dataset_dir + f"/step2b_prompt"
+args.step2b_prompt_path += ".txt"
 args.step3_prompt_path = args.specific_dataset_dir + f"/step3_prompt"
 args.step3_prompt_path += ".txt"
 
@@ -57,17 +59,18 @@ if not os.path.exists(f"{args.output_path}/step1_prompt.txt"):
     shutil.copy(args.step1_prompt_path, f"{args.output_path}/step1_prompt.txt")
 if not os.path.exists(f"{args.output_path}/step2a_prompt.txt"):
     shutil.copy(args.step2a_prompt_path, f"{args.output_path}/step2a_prompt.txt")
-# if not os.path.exists(f"{args.output_path}/step2b_prompt.txt"):
-#     shutil.copy(args.step2b_prompt_path, f"{args.output_path}/step2b_prompt.txt")
+if not os.path.exists(f"{args.output_path}/step2b_prompt.txt"):
+    shutil.copy(args.step2b_prompt_path, f"{args.output_path}/step2b_prompt.txt")
 if not os.path.exists(f"{args.output_path}/step3_prompt.txt"):
     shutil.copy(args.step3_prompt_path, f"{args.output_path}/step3_prompt.txt")
 
 
+if args.dataset == "imagenet":
+    args.num_classes = 8
+
 #--------------------------------------------------------------------------------------
 # ------ Setup dataset and clustering criteria
-if args.dataset == "imagenet":
-    #args.image_folder += "imagenet/"
-    args.num_classes = 10
+
 
 # elif args.dataset == "cifar100":
 #     args.image_folder += "cifar100/"
@@ -87,3 +90,12 @@ if args.dataset == "imagenet":
 #     args.image_folder += "stanford-40-actions/JPEGImages/"
 #     if args.cl_criteria == "action":
 #         args.num_classes = 40
+
+# if not os.path.exists(f"{args.output_path}/step1_prompt.txt"):
+#     shutil.copy(args.step1_prompt_path, f"{args.output_path}/step1_prompt.txt")
+# if not os.path.exists(f"{args.output_path}/step2a_prompt.txt"):
+#     shutil.copy(args.step2a_prompt_path, f"{args.output_path}/step2a_prompt.txt")
+# if not os.path.exists(f"{args.output_path}/step2b_prompt.txt"):
+#     shutil.copy(args.step2b_prompt_path, f"{args.output_path}/step2b_prompt.txt")
+# if not os.path.exists(f"{args.output_path}/step3_prompt.txt"):
+#     shutil.copy(args.step3_prompt_path, f"{args.output_path}/step3_prompt.txt")

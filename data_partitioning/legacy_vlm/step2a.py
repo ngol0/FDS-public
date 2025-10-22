@@ -119,7 +119,7 @@ def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16)
         
         # Update descriptions with LLM responses
         for j, response in enumerate(responses):
-            batch[j]["description"] = response
+            batch[j]["label"] = response
         
         print(f"  - Completed {min(i + inference_batch_size, len(data))}/{len(data)} items\n")
     
