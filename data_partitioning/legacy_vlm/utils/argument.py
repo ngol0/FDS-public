@@ -1,10 +1,32 @@
 import os
 import shutil
+import torch
 import argparse
 from pathlib import Path
 from dotenv import load_dotenv
 from time import strftime, localtime
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer
+import inspect
+import sys
 
+def load_minicpm(model_dir, device, dtype):
+    """Load the (MiniCPM) model and tokenizer."""
+        
+    model = AutoModel.from_pretrained(
+        model_dir, 
+        trust_remote_code=True, 
+        dtype=dtype
+    )
+    model = model.to(device=device, dtype=dtype)
+    model.eval()
+        
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_dir, 
+        trust_remote_code=True
+    )
+        
+    return model, tokenizer
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -28,7 +50,40 @@ args = parser.parse_args()
 
 load_dotenv()
 args.home_path = os.getenv("HOME_PATH")
-args.image_folder = f"{args.home_path}/data/"
+#args.image_folder = f"{args.home_path}/data/"
+
+# model and tokenizer
+#----- Load model ----
+args.model = None
+args.tokenizer = None 
+
+ # Detect which script imported this function
+script_name = os.path.basename(sys.argv[0]).lower() if sys.argv and sys.argv[0] else None
+print(f"Running from script: {script_name}")
+
+if "step1" in script_name.lower():
+    print("Loading Minicpm 2.6...")
+
+    minicpm_model_dir = "/users/sbsh771/archive/vision-saved/minicpm26"
+    args.model, args.tokenizer = load_minicpm(minicpm_model_dir, 'cuda', torch.bfloat16)
+
+else:
+    print("Loading Llama 3.1...")
+    llama_model_path = "/users/sbsh771/archive/vision-saved/llama3.1-instruct"
+
+    args.tokenizer = AutoTokenizer.from_pretrained(llama_model_path, trust_remote_code=True)
+    args.model = AutoModelForCausalLM.from_pretrained(
+        llama_model_path,
+        dtype=torch.float16,
+        device_map="auto",
+        trust_remote_code=True
+    )
+
+    if args.tokenizer.pad_token is None:
+        args.tokenizer.pad_token = args.tokenizer.eos_token
+        args.tokenizer.pad_token_id = args.tokenizer.eos_token_id
+
+args.model.eval()
 
 #------ Setting the params ------- #
 args.general_data_dir = f"{args.home_path}/data_partitioning/legacy_vlm/data/"
@@ -55,41 +110,16 @@ args.step3_prompt_path += ".txt"
 
 
 # Copy the prompts for each experiment
-if not os.path.exists(f"{args.output_path}/step1_prompt.txt"):
-    shutil.copy(args.step1_prompt_path, f"{args.output_path}/step1_prompt.txt")
-if not os.path.exists(f"{args.output_path}/step2a_prompt.txt"):
-    shutil.copy(args.step2a_prompt_path, f"{args.output_path}/step2a_prompt.txt")
-if not os.path.exists(f"{args.output_path}/step2b_prompt.txt"):
-    shutil.copy(args.step2b_prompt_path, f"{args.output_path}/step2b_prompt.txt")
-if not os.path.exists(f"{args.output_path}/step3_prompt.txt"):
-    shutil.copy(args.step3_prompt_path, f"{args.output_path}/step3_prompt.txt")
+shutil.copy(args.step1_prompt_path, f"{args.output_path}/step1_prompt.txt")
+shutil.copy(args.step2a_prompt_path, f"{args.output_path}/step2a_prompt.txt")
+shutil.copy(args.step2b_prompt_path, f"{args.output_path}/step2b_prompt.txt")
+shutil.copy(args.step3_prompt_path, f"{args.output_path}/step3_prompt.txt")
 
 
 if args.dataset == "imagenet":
     args.num_classes = 8
 
 #--------------------------------------------------------------------------------------
-# ------ Setup dataset and clustering criteria
-
-
-# elif args.dataset == "cifar100":
-#     args.image_folder += "cifar100/"
-#     args.num_classes = 20
-# elif args.dataset == "stl10":
-#     args.image_folder += "stl10/test/"
-#     args.num_classes = 10
-# elif args.dataset == "ppmi":
-#     args.image_folder += "ppmi/"
-#     if args.num_classes == 12:
-#         args.image_folder += "12_classes/"
-#     elif args.num_classes == 7:
-#         args.image_folder += "7_classes/"
-#     elif args.num_classes == 2:
-#         args.image_folder += "2_classes/"
-# elif args.dataset == "stanford-40-actions":
-#     args.image_folder += "stanford-40-actions/JPEGImages/"
-#     if args.cl_criteria == "action":
-#         args.num_classes = 40
 
 # if not os.path.exists(f"{args.output_path}/step1_prompt.txt"):
 #     shutil.copy(args.step1_prompt_path, f"{args.output_path}/step1_prompt.txt")

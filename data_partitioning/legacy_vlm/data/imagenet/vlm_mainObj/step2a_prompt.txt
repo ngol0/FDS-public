@@ -1,7 +1,0 @@
-You will be given a description of an image. Describe the image focusing exclusively on the main subject. Avoid proper nouns. Answer in ≤40 tokens. For example, for an image with a general description as follow: 
-
-'''
-The image features a large tree in the middle of a green field, with its branches casting a shadow on the grass. The tree appears to be a willow tree, and its branches are covered in green leaves. The sun is shining, creating a beautiful, serene atmosphere in the scene.
-'''
-
-A good focused description would be 'The image features a large tree. The tree appears to be a willow tree.'

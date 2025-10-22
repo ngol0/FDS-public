@@ -7,7 +7,6 @@ import sys, os
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
 from pathlib import Path
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
@@ -84,7 +83,7 @@ def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 
     return responses
 
 # ------ Run flow ------
-def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16):
+def process_descriptions(args, inference_batch_size: int = 16):
     """
     Process all descriptions and save results.
     
@@ -93,6 +92,10 @@ def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16)
         output_path: Output JSON file path
         inference_batch_size: Number of descriptions to process simultaneously
     """
+
+    model = args.model
+    tokenizer = args.tokenizer
+
     # Load data
     jsonl_path=args.step1_result_path
     output_path=args.step3_result_path
@@ -133,20 +136,6 @@ def process_descriptions(model, tokenizer, args, inference_batch_size: int = 16)
 
 # Usage
 if __name__ == "__main__":
-    #----- Load model ----
-    model_path = "/users/sbsh771/archive/vision-saved/llama3.1-instruct"
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained(model_path, dtype=torch.float16, device_map="auto", trust_remote_code=True)
-    model.eval()
-
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-        tokenizer.pad_token_id = tokenizer.eos_token_id
-
+    
     # ----- Run flow -----
-    process_descriptions(
-        model=model, 
-        tokenizer=tokenizer,
-        args=args,
-        inference_batch_size=64
-    )
+    process_descriptions(args=args, inference_batch_size=64)

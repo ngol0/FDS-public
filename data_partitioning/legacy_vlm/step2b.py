@@ -106,7 +106,7 @@ def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 
         return "Can't find marker!"
 
 # ------ Run flow ------
-def process_labels(model, tokenizer, args):
+def process_labels(args):
     """
     Process all descriptions and save results.
     
@@ -115,6 +115,9 @@ def process_labels(model, tokenizer, args):
         output_path: Output JSON file path
         inference_batch_size: Number of descriptions to process simultaneously
     """
+    model = args.model
+    tokenizer = args.tokenizer
+
     # Load data
     jsonl_path=args.step2a_result_path
 
@@ -150,15 +153,5 @@ def process_labels(model, tokenizer, args):
 
 # Usage
 if __name__ == "__main__":
-    #----- Load model ----
-    model_path = "/users/sbsh771/archive/vision-saved/llama3.1-instruct"
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained(model_path, dtype=torch.float16, device_map="auto", trust_remote_code=True)
-    model.eval()
-
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-        tokenizer.pad_token_id = tokenizer.eos_token_id
-
     # ----- Run flow -----
-    process_labels(model=model, tokenizer=tokenizer, args=args)
+    process_labels(args=args)

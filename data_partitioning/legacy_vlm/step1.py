@@ -1,5 +1,4 @@
 import torch
-from transformers import AutoModel, AutoTokenizer
 import os
 import json
 from datasets import Dataset, load_dataset
@@ -47,28 +46,7 @@ def read_file_to_string(filename):
     return content
 
 # ------- Main VLM pipeline functions -------------
-# STEP 1: Load model
-def load_model(model_dir, device, dtype):
-    """Load the (MiniCPM) model and tokenizer."""
-    logger.info(f"Loading model from {model_dir}")
-        
-    model = AutoModel.from_pretrained(
-        model_dir, 
-        trust_remote_code=True, 
-        torch_dtype=dtype
-    )
-    model = model.to(device=device, dtype=dtype)
-    model.eval()
-        
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_dir, 
-        trust_remote_code=True
-    )
-        
-    logger.info("Model loaded successfully")
-    return model, tokenizer
-
-# STEP 2: Prepare batch question, questions passed in, read from txt file
+# STEP 1: Prepare batch question, questions passed in, read from txt file
 def prepare_batch_questions(data: Dataset, label_set: List[str], 
                             question: str, max_samples: int = None, 
                             skip_grayscale: bool = True) -> List[List[Dict[str, Any]]]:
@@ -249,7 +227,7 @@ def save_to_json(path: str, data: Any) -> None:
     logger.info(f"Results saved to {path}")
 
 #================================= ENTIRE FLOW FOR STEP 1 ========================================
-def process_dataset(args, model, tokenizer,
+def process_dataset(args, 
                     max_samples: int = 6, 
                     batch_size: int = 4,
                     dataset_split: str = "valid") -> None:
@@ -264,6 +242,10 @@ def process_dataset(args, model, tokenizer,
         batch_size: Number of samples to process in each batch
         dataset_split: Dataset split to use
     """
+
+    model = args.model
+    tokenizer = args.tokenizer
+    
     logger.info("Starting dataset processing...")
     
     # Load dataset
@@ -304,16 +286,9 @@ def process_dataset(args, model, tokenizer,
 
 if __name__ == "__main__":
     """Main execution function."""
-    print("Args set up correctly. Data dir: ", args.general_data_dir)
-     
-    # Configuration
-    model_dir = "/users/sbsh771/archive/vision-saved/minicpm26"
-    
-    # Initialize model and tokenizer
-    model, tokenizer = load_model(model_dir, 'cuda', torch.bfloat16)
     
     # Process dataset
-    process_dataset(args=args, model=model, tokenizer=tokenizer, max_samples=None, batch_size=50)
+    process_dataset(args=args, max_samples=None, batch_size=50)
 
 
 
