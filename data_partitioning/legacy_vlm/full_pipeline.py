@@ -1,19 +1,44 @@
 import step1
 import step2a
 import step2b
-import step3
-from utils import model_loader
+import step3_
+from utils import util_loader
+from utils.argument import args
+import gc
+import torch
 
 def main():
     # Load model 
-    llm_model, llm_tokenizer, vlm_model, vlm_tokenizer = model_loader.load_models_for_script() 
+    print("=============== Starting full ICTC pipeline... ========================")
+    print("--- Loading VLM ...")
+    vlm_model, vlm_tokenizer = util_loader.load_minicpm()
+
+    print("----Loading dataset...")
+    # Load data: get dataset_name from argument when run `python script.py --dataset <x>`, default is: imagenet
+    data = util_loader.load_data(args.dataset)
 
     # Run pipeline
-    print("Starting full ICTC pipeline...")
-    step1.main(vlm_model, vlm_tokenizer, max_samples=None, batch_size=50)
+    print("1) === Step 1...")
+    step1.main(vlm_model, vlm_tokenizer, data=data, max_samples=None, batch_size=50)
+
+    # Unload vlm here:
+    del vlm_model
+    del vlm_tokenizer
+    gc.collect()
+    torch.cuda.empty_cache()
+
+    print("--- VLM unloaded, loading LLM...")
+    llm_model, llm_tokenizer = util_loader.load_llama()
+
+    print("2a) === Step 2a...")
     step2a.main(llm_model, llm_tokenizer, inference_batch_size=64)
+
+    print("2b) === Step 2b...")
     step2b.main(llm_model, llm_tokenizer)
-    step3.main(llm_model, llm_tokenizer, inference_batch_size=64)
+
+    print("3) === Step 3...")
+    step3_.main(llm_model, llm_tokenizer, inference_batch_size=64)
+    
     print("Full pipeline finished successfully!")
 
 if __name__ == "__main__":

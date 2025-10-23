@@ -5,13 +5,15 @@ from datasets import Dataset, load_dataset
 from typing import List, Dict, Tuple, Any
 import logging
 import sys, os
-from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
-from utils import model_loader
-sys.path.insert(0, str(Path(__file__).parent.parent))
-import dataset
+from utils import util_loader
 from PIL import Image
+
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from dataset import BaseDataset
 
 # ---- Set up directory path ----
 env_path = find_dotenv()
@@ -214,7 +216,7 @@ def save_to_json(path: str, data: Any) -> None:
     logger.info(f"Results saved to {path}")
 
 #================================= ENTIRE FLOW FOR STEP 1 ========================================
-def main(model, tokenizer,
+def main(model, tokenizer, data: BaseDataset,
         max_samples: int = 6, 
         batch_size: int = 4) -> None:
     """
@@ -227,19 +229,6 @@ def main(model, tokenizer,
         dataset_split: Dataset split to use
     """
     logger.info("Starting dataset processing...")
-    
-    # Load dataset
-    # ---- For TinyImagenet -----
-    if args.dataset == "imagenet":
-        logger.info("Dataset: TinyImagenet")
-        data = dataset.BaseDataset("tiny_imagenet", "/users/sbsh771/gtai/FDS", "val")
-    if args.dataset == "food101":
-        logger.info("Dataset: Food 101")
-        data = dataset.BaseDataset("food101", "/users/sbsh771/gtai/FDS", "test")
-    #>>> todo: add other dataset here:
-    
-    #data = ds.data
-    #label_names = ds.labels
     
     # Prepare questions
     question = read_file_to_string(args.step1_prompt_path)
@@ -273,11 +262,11 @@ def main(model, tokenizer,
 if __name__ == "__main__":
     """Main execution function."""
 
-    model = model_loader.vlm_model
-    tokenizer = model_loader.vlm_tokenizer
+    model, tokenizer = util_loader.load_minicpm()
+    data = util_loader.load_data(args.dataset)
     
     # Process dataset
-    main(model=model, tokenizer=tokenizer, max_samples=None, batch_size=50)
+    main(model=model, tokenizer=tokenizer, data=data, max_samples=None, batch_size=50)
 
 
 

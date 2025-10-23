@@ -1,13 +1,12 @@
 import torch
 import os
 import json
-from utils import model_loader
+from utils import util_loader
 from typing import List
 import logging
 import sys, os
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
-from pathlib import Path
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
@@ -144,7 +143,6 @@ def main(model, tokenizer):
 # Usage
 if __name__ == "__main__":
     # ----- Run flow -----
-    model = model_loader.llm_model
-    tokenizer = model_loader.llm_tokenizer
+    model, tokenizer = util_loader.load_llama()
 
     main(model=model, tokenizer=tokenizer)
