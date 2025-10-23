@@ -5,9 +5,13 @@ from datasets import Dataset, load_dataset
 from typing import List, Dict, Tuple, Any
 import logging
 import sys, os
+from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
 from utils import model_loader
+sys.path.insert(0, str(Path(__file__).parent.parent))
+import dataset
+from PIL import Image
 
 # ---- Set up directory path ----
 env_path = find_dotenv()
@@ -15,26 +19,6 @@ load_dotenv(env_path)
 home_path = os.getenv("HOME_PATH")
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 # print(">>> sys.path includes:", sys.path[-3:])
-
-# ------Load dataset func ----------
-def load_tiny_imagenet(group: str = "train") -> Tuple[Dataset, List[str]]:
-    """
-    Load TinyImageNet dataset.
-        
-    Args:
-        group: Dataset split to load ('train', 'valid', or 'test')
-            
-    Returns:
-        Tuple of (dataset, label_names)
-    """
-    ds = load_dataset("zh-plus/tiny-imagenet")
-    img_group = ds[group]
-    label_names = img_group.features['label'].names
-
-    # Normalize to list[dict]
-    samples = [{"image": item["image"], "label": item["label"]} for item in img_group]
-
-    return samples, label_names
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
@@ -48,7 +32,7 @@ def read_file_to_string(filename):
 
 # ------- Main VLM pipeline functions -------------
 # STEP 1: Prepare batch question, questions passed in, read from txt file
-def prepare_batch_questions(data: Dataset, label_set: List[str], 
+def prepare_batch_questions(data: Dataset,
                             question: str, max_samples: int = None, 
                             skip_grayscale: bool = True) -> List[List[Dict[str, Any]]]:
     """
@@ -68,21 +52,23 @@ def prepare_batch_questions(data: Dataset, label_set: List[str],
     processed_count = 0
     
     # # ---- For TinyImagenet -----
-    for i, sample in enumerate(data):
+    for i in range(len(data.data)):
         if max_samples and processed_count >= max_samples:
             break
         
-        image = sample['image']
-        label_index = sample['label']
-        label = label_set[label_index]
+        image_path = data.data[i] 
+        label = data.labels[i]
+
+        with Image.open(image_path) as image:
+            image_copy = image.copy()
 
         # Skip grayscale images if requested
-        if skip_grayscale and image.mode != 'RGB':
+        if skip_grayscale and image_copy.mode != 'RGB':
             logger.info(f"Skipping grayscale image at index {i}")
             continue
         # else: 
         #     # -------> todo: convert to RGB
-        #     image.mode = 'RGB'
+        #     image.mode = 'RGB'?
         
         # Prepare question in the required format
         question_batch = [{"role": "user", "content": [image, question]}]
@@ -230,8 +216,7 @@ def save_to_json(path: str, data: Any) -> None:
 #================================= ENTIRE FLOW FOR STEP 1 ========================================
 def main(model, tokenizer,
         max_samples: int = 6, 
-        batch_size: int = 4,
-        dataset_split: str = "valid") -> None:
+        batch_size: int = 4) -> None:
     """
     Main method to process the entire dataset.
     
@@ -247,14 +232,19 @@ def main(model, tokenizer,
     # ---- For TinyImagenet -----
     if args.dataset == "imagenet":
         logger.info("Dataset: TinyImagenet")
-        data, label_names = load_tiny_imagenet(dataset_split)
-    #todo: add other dataset here:
-    #
+        data = dataset.BaseDataset("tiny_imagenet", "/users/sbsh771/gtai/FDS", "val")
+    if args.dataset == "food101":
+        logger.info("Dataset: Food 101")
+        data = dataset.BaseDataset("food101", "/users/sbsh771/gtai/FDS", "test")
+    #>>> todo: add other dataset here:
+    
+    #data = ds.data
+    #label_names = ds.labels
     
     # Prepare questions
     question = read_file_to_string(args.step1_prompt_path)
     print("Preparing batch question.... Question: ", question)
-    prepared_data = prepare_batch_questions(data, label_names, question, max_samples)
+    prepared_data = prepare_batch_questions(data, question, max_samples)
     
     # Process in batches
     all_results = []
