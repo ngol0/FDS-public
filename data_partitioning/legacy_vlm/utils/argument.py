@@ -27,7 +27,7 @@ args, _ = parser.parse_known_args()
 
 # ---criteria choices (depends on dataset)
 if args.dataset == "imagenet":
-    criteria_choices = ["main_object", "size"]
+    criteria_choices = ["main_object", "size", "time", "color", "location"]
 elif args.dataset == "food101":
     criteria_choices = ["ingredient", "category"]
 else:
@@ -37,9 +37,9 @@ parser.add_argument("--criteria", type=str, default="main_object", choices=crite
 
 # ---model choices
 # for llama
-parser.add_argument("--llama_ver", type=str, default="llama_7b", choices = ["llama_7b", "llama_70b"])
+parser.add_argument("--llama_ver", type=str, default="llama_70b", choices = ["llama_7b", "llama_70b"])
 # for vlm
-parser.add_argument("--vlm_model", type=str, default="minicpm", choices = ["minicpm", "internVl3"])
+parser.add_argument("--vlm_model", type=str, default="internVl3", choices = ["minicpm", "internVl3"])
 
 args = parser.parse_args()
 

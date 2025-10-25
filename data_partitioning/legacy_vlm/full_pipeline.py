@@ -19,7 +19,7 @@ def main():
 
     # Run pipeline
     print("1) === Step 1...")
-    step1.main(vlm_model, vlm_tokenizer, data=data, max_samples=None, batch_size=50)
+    step1.main(vlm_model, vlm_tokenizer, data=data, max_samples=None, batch_size=64)
 
     # Unload vlm here:
     del vlm_model
