@@ -11,10 +11,10 @@ def main():
     # Load model 
     print("=============== Starting full ICTC pipeline... ========================")
     print("--- Loading VLM ...")
-    vlm_model, vlm_tokenizer = util_loader.load_minicpm()
+    vlm_model, vlm_tokenizer = util_loader.load_vlm(args.vlm_model)
 
     print("----Loading dataset...")
-    # Load data: get dataset_name from argument when run `python script.py --dataset <x>`, default is: imagenet
+    # Load data: get dataset_name from argument when run `python script.py --dataset <name>`, default is: imagenet
     data = util_loader.load_data(args.dataset)
 
     # Run pipeline
@@ -28,7 +28,7 @@ def main():
     torch.cuda.empty_cache()
 
     print("--- VLM unloaded, loading LLM...")
-    llm_model, llm_tokenizer = util_loader.load_llama()
+    llm_model, llm_tokenizer = util_loader.load_llm(args.llama_ver)
 
     print("2a) === Step 2a...")
     step2a.main(llm_model, llm_tokenizer, inference_batch_size=64)

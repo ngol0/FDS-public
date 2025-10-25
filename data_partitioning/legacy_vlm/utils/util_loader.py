@@ -9,18 +9,25 @@ from dataset import BaseDataset
 
 # model and tokenizer
 #----- Load model ----
-llm_model = None
-llm_tokenizer = None 
-vlm_model = None
-vlm_tokenizer = None
 
+# VLM
 minicpm_model_dir = "/users/sbsh771/archive/vision-saved/minicpm26"
-llama_model_path = "/users/sbsh771/archive/vision-saved/llama3.1-instruct"
+internVL3_model_dir = "/users/sbsh771/archive/vision-saved/internVl3"
 
-def load_llama():
-    tokenizer = AutoTokenizer.from_pretrained(llama_model_path, trust_remote_code=True)
+# LLM
+llama_7b_model_dir = "/users/sbsh771/archive/vision-saved/llama3.1-instruct"
+llama_70b_model_dir = "/users/sbsh771/archive/vision-saved/llama3.3"
+
+def load_llm(ver: str = "llama_7b"):
+    # Pick the model
+    if (ver == "llama_7b"):
+        model_path = llama_7b_model_dir
+    if (ver == "llama_70b"):
+        model_path = llama_70b_model_dir
+
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
-        llama_model_path,
+        llama_7b_model_dir,
         dtype=torch.float16,
         device_map="auto",
         trust_remote_code=True
@@ -33,11 +40,16 @@ def load_llama():
 
     return model, tokenizer
 
-def load_minicpm():
+def load_vlm(choice: str = "minicpm"):
     """Load the (MiniCPM) model and tokenizer."""
+    # Pick the model
+    if (choice == "minicpm"):
+        model_path = minicpm_model_dir
+    if (choice == "internVl3"):
+        model_path = internVL3_model_dir
         
     model = AutoModel.from_pretrained(
-        minicpm_model_dir, 
+        model_path, 
         trust_remote_code=True, 
         dtype=torch.bfloat16
     )
@@ -53,7 +65,6 @@ def load_minicpm():
 
 def load_data(dataset: str):
     # Load dataset
-    # ---- For TinyImagenet -----
     if dataset == "imagenet":
         print("Dataset: TinyImagenet")
         data = BaseDataset("tiny_imagenet", "/users/sbsh771/gtai/FDS", "val")

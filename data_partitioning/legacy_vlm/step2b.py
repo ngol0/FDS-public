@@ -143,6 +143,6 @@ def main(model, tokenizer):
 # Usage
 if __name__ == "__main__":
     # ----- Run flow -----
-    model, tokenizer = util_loader.load_llama()
+    model, tokenizer = util_loader.load_llm(args.llama_ver)
 
     main(model=model, tokenizer=tokenizer)

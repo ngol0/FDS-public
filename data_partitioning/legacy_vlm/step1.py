@@ -262,7 +262,7 @@ def main(model, tokenizer, data: BaseDataset,
 if __name__ == "__main__":
     """Main execution function."""
 
-    model, tokenizer = util_loader.load_minicpm()
+    model, tokenizer = util_loader.load_vlm(args.vlm_model)
     data = util_loader.load_data(args.dataset)
     
     # Process dataset

@@ -130,7 +130,7 @@ def main(model, tokenizer, inference_batch_size: int = 16):
 
 # Usage
 if __name__ == "__main__":
-    model, tokenizer = util_loader.load_llama()
+    model, tokenizer = util_loader.load_llm(args.llama_ver)
 
     # ----- Run flow -----
     main(model=model, tokenizer=tokenizer, inference_batch_size=64)
