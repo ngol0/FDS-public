@@ -10,4 +10,4 @@ To run script:
 `python <script>.py --dataset <data> --criteria <criterion> --llama_ver <llama_model> --vlm_model <vlm_model>`
 
 ### Output: 
-data > `dataset_name` > `exp_name`
+data > `dataset_name` > `output_criteria`
