@@ -5,9 +5,9 @@ from datasets import Dataset
 from typing import List, Dict, Tuple, Any
 import logging
 import sys, os
-from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
 from utils import util_loader
+from utils import helper
 from PIL import Image
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -20,7 +20,8 @@ from torchvision.transforms.functional import InterpolationMode
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
 
-# --- Utils for InternVL3 (referenced from Transformers: https://huggingface.co/OpenGVLab/InternVL3-38B) ---
+# --- Utils for InternVL3 (referenced from Hugging Face: https://huggingface.co/OpenGVLab/InternVL3-38B) ---
+# Could ignore these as it's only used for InternVL3 inference
 def build_transform(input_size):
     MEAN, STD = IMAGENET_MEAN, IMAGENET_STD
     transform = T.Compose([
@@ -99,21 +100,16 @@ def load_image(image, input_size=448, max_num=12):
     return pixel_values
 
 # ---- Set up directory path ----
-env_path = find_dotenv()
-load_dotenv(env_path)
-home_path = os.getenv("HOME_PATH")
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+# from dotenv import load_dotenv, find_dotenv
+# env_path = find_dotenv()
+# load_dotenv(env_path)
+# home_path = os.getenv("HOME_PATH")
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 # print(">>> sys.path includes:", sys.path[-3:])
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# ----- Other utils functions -----------
-def read_file_to_string(filename):
-    with open(filename, 'r') as file:
-        content = file.read()
-    return content
 
 # ------- Main VLM pipeline functions -------------
 # STEP 1: Prepare batch question, questions passed in, read from txt file
@@ -368,7 +364,8 @@ def main(model, tokenizer, data: BaseDataset,
     """
     all_results = []
     logger.info("Starting dataset processing...")
-    question = read_file_to_string(args.step1_prompt_path)
+    question = helper.read_file_to_string(args.step1_prompt_path)
+    question = question.replace("[__CRITERION__]", str((args.prompt_label).lower()))
 
     # Prepare questions
     print("Preparing batch question.... ")

@@ -4,41 +4,22 @@ import json
 from typing import List, Dict
 import logging
 import sys, os
-from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
 from utils import util_loader
-
+from utils import helper
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# ---- Set up directory path ----
-env_path = find_dotenv()
-load_dotenv(env_path)
-home_path = os.getenv("HOME_PATH")
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-# print(">>> sys.path includes:", sys.path[-3:])
-
-# --- Load captions from JSONL ---
-def load_data(jsonl_path: str) -> List[Dict]:
-    """Load data from JSONL file."""
-    with open(jsonl_path, 'r', encoding='utf-8') as f:
-        return json.load(f)
-
-# Read from from txt file
-def read_file_to_string(filename):
-    with open(filename, 'r') as file:
-        content = file.read()
-    return content
 
 # ------------------------- Step 2 funcs ------------------------------------------------------
 # ---- Step 1: Prepare captions in batch----
 def format_prompt(caption: List[str]) -> str:
     """Format captions into a prompt asking for exact description."""
     return f'''
-    Image description: "{caption}" 
-    Your response:
+Task: Read the image description and respond with one word about the "{args.prompt_label}".
+Image description: "{caption}" 
+Your response:
 '''
 
 # --- Build chat prompt using messages format ---
@@ -52,6 +33,7 @@ def build_chat_prompt(model, tokenizer, system_prompt: str, captions: str) -> st
 # --- Step 2: Query LLaMA model ---
 def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 512) -> List[str]:
     """Process multiple prompts in one batch."""
+    tokenizer.padding_side = 'left'
     inputs = tokenizer(
         prompts, 
         return_tensors="pt", 
@@ -64,23 +46,31 @@ def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 
         outputs = model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
-            do_sample=True,
-            temperature=0.2,
-            top_p=0.9,
+            do_sample=False,
+            temperature=None,
+            top_p=None,
             eos_token_id=tokenizer.eos_token_id,
         )
     
     responses = []
     for output in outputs:
-        response = tokenizer.decode(output, skip_special_tokens=True)
-        print("RESPONSE: ", response)
+        response = tokenizer.decode(output, skip_special_tokens=True).strip()
+        #print("RESPONSE: ", response)
         marker = "assistant"  
         idx = response.find(marker)
         if idx != -1:
-            responses.append(response[idx + len(marker):].strip())
+            response = response[idx + len(marker):].strip()
+            response = helper.clean_response(response)
         else:
-            responses.append(response.strip())
+           response = response.strip()
     
+        print("Cleaned response: ", response)
+        # Debug blank responses
+        if response == "":
+            logger.warning(f"Blank response")
+        
+        responses.append(response)
+
     return responses
 
 # ------ Run flow ------
@@ -97,10 +87,11 @@ def main(model, tokenizer, inference_batch_size: int = 16):
     input_path=args.step1_result_path
     output_path=args.step2a_result_path
 
-    data = load_data(input_path)
+    data = helper.load_data(input_path)
     logger.info(f"Loaded {len(data)} items")
     
-    system_prompt = read_file_to_string(args.step2a_prompt_path)
+    system_prompt = helper.read_file_to_string(args.step2a_prompt_path)
+    system_prompt = system_prompt.replace("[__CRITERION__]", str(args.prompt_label.lower()))
     
     # Process in batches
     logger.info("Starting LLM inference...")

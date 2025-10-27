@@ -7,6 +7,7 @@ import sys, os
 from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
 from utils import util_loader
+from utils import helper
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
@@ -19,24 +20,12 @@ home_path = os.getenv("HOME_PATH")
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 # print(">>> sys.path includes:", sys.path[-3:])
 
-# --- Load captions from JSONL ---
-def load_data(json_path: str) -> List[Dict]:
-    """Load data from JSONL file."""
-    with open(json_path, 'r', encoding='utf-8') as f:
-        return json.load(f)
-
-# Read from from txt file
-def read_file_to_string(filename):
-    with open(filename, 'r') as file:
-        content = file.read()
-    return content
-
-# ------------------------- Step 2 funcs ------------------------------------------------------
-# ---- Step 1: Prepare captions in batch ----
+# ------------------------- Step 3 funcs ------------------------------------------------------
+# ---- Step 1: Prepare prompt ----
 def format_prompt(caption: List[str]) -> str:
     """Format captions into a prompt asking for exact description."""
     return f'''
-    Image description: {caption}. 
+    Image description: {caption}
     Your response:
 '''
 
@@ -76,32 +65,36 @@ def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 
         marker = "assistant"  
         idx = response.find(marker)
         if idx != -1:
-            responses.append(response[idx + len(marker):].strip())
+            response = response[idx + len(marker):].strip()
+            response = helper.clean_response(response)
         else:
-            responses.append(response.strip())
+           response = response.strip()
+    
+        #print("Cleaned response: ", response)
+        # Debug blank responses
+        if response == "":
+            logger.warning(f"Blank response")
+        
+        responses.append(response)
     
     return responses
 
 # ------ Run flow ------
 def main(model, tokenizer, inference_batch_size: int = 16):
     """
-    Classification using caption + class list and save results.
+    Classification and save results.
     
     Args:
+        model, tokenizer: LLM
         inference_batch_size: Number of descriptions to process simultaneously
     """
-
+    
     # Load data
-    jsonl_path=args.step1_result_path
+    input_path=args.step1_result_path
     output_path=args.step3_result_path
 
-    data = load_data(jsonl_path)
+    data = helper.load_data(input_path)
     logger.info(f"Loaded {len(data)} items")
-
-    # Load prompt from txt file
-    system_prompt = read_file_to_string(args.step3_prompt_path)
-    class_list = ["landscape", "human", "animal", "plant", "inanimate object", "unknown"]
-    system_prompt = system_prompt.replace("[__CLASSES__]", str(class_list))
     
     # Process in batches
     logger.info("Starting LLM inference...")
@@ -109,6 +102,12 @@ def main(model, tokenizer, inference_batch_size: int = 16):
         batch = data[i:i+inference_batch_size]
         
         # Build prompts for this batch
+        class_list = helper.extract_categories(args.step2b_result_path)
+        #class_list = ["landscape", "human", "animal", "plant", "inanimate object", "unknown"]
+        system_prompt = helper.read_file_to_string(args.step3_prompt_path)
+        system_prompt = system_prompt.replace("[__CLASSES__]", str(class_list))
+        system_prompt = system_prompt.replace("[__CRITERION__]", str((args.prompt_label).lower()))
+
         prompts = [
             build_chat_prompt(model, tokenizer, system_prompt, item["description"]) for item in batch]
         
@@ -132,6 +131,7 @@ def main(model, tokenizer, inference_batch_size: int = 16):
 # Usage
 if __name__ == "__main__":
     # ----- Run flow -----
+
     model, tokenizer = util_loader.load_llm(args.llama_ver)
 
     main(model=model, tokenizer=tokenizer, inference_batch_size=64)

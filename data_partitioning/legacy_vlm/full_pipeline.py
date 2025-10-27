@@ -1,7 +1,7 @@
 import step1
 import step2a
 import step2b
-import step3_
+import step3
 from utils import util_loader
 from utils.argument import args
 import gc
@@ -37,7 +37,7 @@ def main():
     step2b.main(llm_model, llm_tokenizer)
 
     print("3) === Step 3...")
-    step3_.main(llm_model, llm_tokenizer, inference_batch_size=64)
+    step3.main(llm_model, llm_tokenizer, inference_batch_size=64)
     
     print("Full pipeline finished successfully!")
 

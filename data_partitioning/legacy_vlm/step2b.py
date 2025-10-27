@@ -5,22 +5,14 @@ from utils import util_loader
 from typing import List
 import logging
 import sys, os
-from dotenv import load_dotenv, find_dotenv
 from utils.argument import args
+from utils import helper
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ---- Set up directory path ----
-env_path = find_dotenv()
-load_dotenv(env_path)
-home_path = os.getenv("HOME_PATH")
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-# print(">>> sys.path includes:", sys.path[-3:])
-
-# --- Load captions from JSONL ---
-# --- Step 1: Load captions from JSONL ---
+# --- Step 1: Load captions from JSONL and get the label + calculate its occurence ---
 def post_process(json_path: str):
     """
     Load labels from JSON and count their occurrences.
@@ -47,13 +39,7 @@ def post_process(json_path: str):
     
     return answer_list
 
-# Read from from txt file
-def read_file_to_string(filename):
-    with open(filename, 'r') as file:
-        content = file.read()
-    return content
-
-# ------------------------- Step 2 funcs ------------------------------------------------------
+# ------------------------- Step 2b funcs ------------------------------------------------------
 # ---- Step 1: Prepare captions in batch----
 def format_prompt(labels, num_of_class) -> str:
     """Format captions into a prompt asking for exact description."""
@@ -72,7 +58,7 @@ def build_chat_prompt(model, tokenizer, system_prompt: str, labels, num_class) -
     return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
 # --- Step 2: Query LLaMA model ---
-def query_llm(model, tokenizer, prompts: List[str], max_new_tokens: int = 512) -> List[str]:
+def query_llm(model, tokenizer, prompts: List[str], max_new_tokens: int = 1024) -> List[str]:
     """Process one prompt."""
     inputs = tokenizer(
         prompts, 
@@ -126,7 +112,7 @@ def main(model, tokenizer):
 
     print("Post-processed dictionary: ", label_counts)
     
-    system_prompt = read_file_to_string(args.step2b_prompt_path)
+    system_prompt = helper.read_file_to_string(args.step2b_prompt_path)
     system_prompt = system_prompt.replace("[__NUM_CLASSES_CLUSTER__]", str(args.num_classes))
     system_prompt = system_prompt.replace("[__LEN__]", str(len(label_counts)))
 

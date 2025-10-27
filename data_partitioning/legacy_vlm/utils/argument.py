@@ -23,11 +23,12 @@ parser.add_argument("--dataset", type=str, default="imagenet", choices=["imagene
 args, _ = parser.parse_known_args()
 
 # ---output dir
-#parser.add_argument("--exp_name", type=str, default="test")
+parser.add_argument("--exp_name", type=str, default="test")
 
 # ---criteria choices (depends on dataset)
 if args.dataset == "imagenet":
     criteria_choices = ["main_object", "size", "time", "color", "location"]
+    prompt_criteria = ["Main Object", "Size and Scale", "Time of day", "Dominant Color", "Location"]
 elif args.dataset == "food101":
     criteria_choices = ["ingredient", "category"]
 else:
@@ -52,7 +53,7 @@ if not args.home_path:
 #------ Setting the params ------- #
 args.general_data_dir = f"{args.home_path}/data_partitioning/legacy_vlm/data/"
 args.specific_dataset_dir = args.general_data_dir + args.dataset
-args.output_path = args.specific_dataset_dir + f"/output_{args.criteria}"
+args.output_path = args.specific_dataset_dir + f"/output_{args.criteria}_{args.exp_name}"
 
 # ------ Create output folder for each run ------
 Path(args.output_path).mkdir(parents=True, exist_ok=True)
@@ -79,6 +80,15 @@ shutil.copy(args.step1_prompt_path, f"{args.output_path}/step1_prompt.txt")
 shutil.copy(args.step2a_prompt_path, f"{args.output_path}/step2a_prompt.txt")
 shutil.copy(args.step2b_prompt_path, f"{args.output_path}/step2b_prompt.txt")
 shutil.copy(args.step3_prompt_path, f"{args.output_path}/step3_prompt.txt")
+
+# ----- set up criteria for parsing into prompt --
+# find index of the chosen criteria
+criteria_index = criteria_choices.index(args.criteria)
+# get corresponding prompt label
+args.prompt_label = prompt_criteria[criteria_index] if criteria_index < len(prompt_criteria) else None
+
+print(f"Selected criteria: {args.criteria} (index {criteria_index})")
+print(f"Prompt label: {args.prompt_label}")
 
 # Define the number of classes for step 3
 if args.dataset == "imagenet":
