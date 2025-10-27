@@ -1,0 +1,18 @@
+{
+    "learning_rate": 0.0005,
+    "fedprox_mu": 0.0,
+    "batch_size": 64,
+    "max_steps": 16000,
+    "scheduler": "sgd",
+    "model_name": "vgg11",
+    "optimizer_args": {
+        "class": "Adam"
+    },
+    "optim_resume": "resume",
+    "local_steps": 200,
+    "use_half_precision": true,
+    "interp_method": "",
+    "grad_clipping_type": "none",
+    "grad_clipping_value": 1.0,
+    "steps_or_epochs": "epochs"
+}
