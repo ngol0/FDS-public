@@ -22,7 +22,7 @@ Default params if not specified:
 I.e: data/imagenet/output_main_object_test
 
 ### Prompt:
-Prompts for each step are set up for each dataset in a .txt file. They are located in: `data/<dataset_name>`. After running, the prompts for that run are also copied into the output folder.
+Prompts for each dataset are set up in a .txt file. They are located in: `data/<dataset_name>`. After running, the prompts for that run are also copied into the output folder.
 
 
 
