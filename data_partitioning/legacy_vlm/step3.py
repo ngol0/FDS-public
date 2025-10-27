@@ -1,10 +1,8 @@
 import torch
-import os
 import json
-from typing import List, Dict
+from typing import List
 import logging
-import sys, os
-from dotenv import load_dotenv, find_dotenv
+import os
 from utils.argument import args
 from utils import util_loader
 from utils import helper
@@ -12,13 +10,6 @@ from utils import helper
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# ---- Set up directory path ----
-env_path = find_dotenv()
-load_dotenv(env_path)
-home_path = os.getenv("HOME_PATH")
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-# print(">>> sys.path includes:", sys.path[-3:])
 
 # ------------------------- Step 3 funcs ------------------------------------------------------
 # ---- Step 1: Prepare prompt ----
@@ -70,10 +61,11 @@ def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 
         else:
            response = response.strip()
     
-        #print("Cleaned response: ", response)
+        print("Cleaned response: ", response)
         # Debug blank responses
         if response == "":
             logger.warning(f"Blank response")
+            response = "Unknown"
         
         responses.append(response)
     
