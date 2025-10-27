@@ -1,0 +1,37 @@
+{
+    "format_version": 2,
+    "client": {
+        "communication_timeout": 120.0
+    },
+    "executors": [
+        {
+            "tasks": [
+                "train",
+                "submit_model",
+                "validate"
+            ],
+            "executor": {
+                "id": "Executor",
+                "name": "LearnerExecutor",
+                "args": {
+                    "learner_id": "learner"
+                }
+            }
+        }
+    ],
+    "task_result_filters": [],
+    "task_data_filters": [],
+    "components": [
+        {
+            "id": "learner",
+            "path": "fl_training.tiny.src.learner.TinyImageNetLearner",
+            "args": {
+                "config_train_name": "config_train.json",
+                "method": "fedavg",
+                "seed": 999,
+                "central": false,
+                "hyperion": true
+            }
+        }
+    ]
+}
