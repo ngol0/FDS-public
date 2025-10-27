@@ -18,6 +18,7 @@ Default params if not specified:
 
 ### Output: 
 `data/<dataset_name>/<output_criteria_name_of_experiment>`
+
 I.e: data/imagenet/output_main_object_test
 
 ### Prompt:
