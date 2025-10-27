@@ -64,10 +64,7 @@ class BaseDataset(Dataset):
             raise FileNotFoundError(f"Base path {self.base_path} does not exist")
 
         if self.dataset_name not in self._loaders:
-            raise ValueError(
-                f"Dataset '{self.dataset_name}' not supported. "
-                f"Available: {list(self._loaders.keys())}"
-            )
+            raise ValueError(f"Dataset '{self.dataset_name}' not supported. " f"Available: {list(self._loaders.keys())}")
 
     def _load_dataset(self):
         loader_func = self._loaders[self.dataset_name]
@@ -97,9 +94,7 @@ class BaseDataset(Dataset):
             "total_samples": len(self),
             "unique_labels": len(set(self.labels)),
             "base_path": str(self.base_path),
-            "label_distribution": {
-                label: self.labels.count(label) for label in set(self.labels)
-            },
+            # "label_distribution": {label: self.labels.count(label) for label in set(self.labels)},
         }
 
 
@@ -128,9 +123,7 @@ def _load_tiny_imagenet(self) -> None:
         # val annotations are in a text file
         val_annotations_file = split_path / "val_annotations.txt"
         if not val_annotations_file.exists():
-            raise FileNotFoundError(
-                f"Validation annotations file {val_annotations_file} does not exist"
-            )
+            raise FileNotFoundError(f"Validation annotations file {val_annotations_file} does not exist")
 
         img_to_label = {}
         with open(val_annotations_file, "r") as f:
@@ -187,20 +180,26 @@ def _load_ade20k(self):
     # convert to ADE20K naming
     self.split = "training" if self.split == "train" else "validation"
 
-    images_dir = self.base_path / "ADE20K_2021_17_01" / "images" / "ADE" / self.split
+    images_dir = self.base_path / "ADE20K" / "ADE20K_2021_17_01" / "images" / "ADE" / self.split
 
     if not images_dir.exists():
         raise FileNotFoundError(f"Images directory {images_dir} does not exist")
 
-    for img_file in sorted(images_dir.glob("*.jpg")):
-        self.data.append(str(img_file))
-        # Placeholder until we set up our task and model
-        self.labels.append("unknown")
+    for root, _, files in os.walk(images_dir):
+        for file in files:
+            if file.endswith(".jpg"):
+                img_file = Path(root) / file
+                self.data.append(str(img_file))
+                mask_file = img_file.with_name(img_file.stem + "_seg.png")
+                if mask_file.exists():
+                    self.labels.append(str(mask_file))
+                else:
+                    raise Warning(f"Mask file {mask_file} does not exist")
 
 
 if __name__ == "__main__":
 
-    dataset = BaseDataset("food101", "/users/adcw447/gtai/FDS", "test")
+    dataset = BaseDataset("ade20k", "/users/adcw447/gtai/FDS", "train")
     print(f"Dataset size: {len(dataset)}")
     print(f"Summary: {dataset.get_summary()}")
 
