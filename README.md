@@ -17,7 +17,7 @@ Default params if not specified:
 * vlm_model: InternVL3 38B
 
 ### Output: 
-data/<dataset_name>/<output_<criteria>_<name_of_experiment>
+data/<dataset_name>/<output>_<criteria>_<name_of_experiment>
 
 ### Prompt:
 Prompts for each step are set up for each dataset in a .txt file. They are located in: `data/<dataset_name>`. After running, the prompts for that run are also copied into the output folder.
