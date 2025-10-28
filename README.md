@@ -22,11 +22,15 @@ Default params if not specified:
 Example: data/imagenet/output_main_object_test
 
 ### Prompt:
-Prompts for each dataset are set up in a .txt file. They are located in: `data/<dataset_name>`. After running, the prompts for that run are also copied into the output folder.
+Prompts for each dataset are set up in .txt files. They are located in: `data/<dataset_name>`. 
+
+Each step’s prompt is dynamically customized based on the selected criterion. The script automatically embeds the corresponding values from the `criteria_prompt` (all steps), `examplar_criteria` (step 2a), and `num_classes` (step 3) lists defined in `utils/argument.py`, to make sure that each step uses the appropriate wording for the chosen criterion. 
+
+After running, the prompts for that run are also copied into the output folder.
 
 ### Set up: 
 * Model and dataset: In `utils/utils_loader.py`. Edit to user's custom path for VLM/LLM and dataset when run.
-* Criteria for prompt customization: In `utils/argument.py`. 
+* Arguments settings: In `utils/argument.py`. 
 
 
 
