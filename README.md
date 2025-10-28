@@ -19,7 +19,7 @@ Default params if not specified:
 ### Output: 
 `data/<dataset_name>/<output_criteria_name_of_experiment>`
 
-Example: data/imagenet/output_main_object_test
+Example: data/tiny_imagenet/output_main_object_test
 
 ### Prompt:
 Prompts for each dataset are set up in .txt files. They are located in: `data/<dataset_name>`. 
