@@ -4,6 +4,9 @@ import argparse
 from pathlib import Path
 from dotenv import load_dotenv
 from time import strftime, localtime
+from utils.constants import TINY_IMAGENET, FOOD101, PASCALVOC, ADE20K
+from utils.constants import INTERNVL3, LLAMA_33_70B, LLAMA31_8B_INSTRUCT , MINICPM_26
+
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -18,20 +21,27 @@ def str2bool(v):
 parser = argparse.ArgumentParser(description="Experiment arguments for ICTC")
 
 # ---datadir
-parser.add_argument("--dataset", type=str, default="imagenet", choices=["imagenet", "food101", "pascalvoc", "ade20k"])
+parser.add_argument("--dataset", type=str, default=TINY_IMAGENET, choices=[TINY_IMAGENET, FOOD101, PASCALVOC, ADE20K])
 # ---parse initial arguments first
 args, _ = parser.parse_known_args()
 
 # ---output dir
 parser.add_argument("--exp_name", type=str, default="test")
 
-# ---criteria choices (depends on dataset)
-if args.dataset == "imagenet":
+# ---*** criteria choices and set up (depends on dataset) ***------------------
+if args.dataset == TINY_IMAGENET:
     criteria_choices = ["main_object", "size", "time", "color", "location"]
     prompt_criteria = ["Main Object", "Size and Scale", "Time of day", "Dominant Color", "Location"]
     examplar_criteria = ["Tree", "Large", "Sun", "Green", "Field"] # embedded in step 2a
-elif args.dataset == "food101":
+    num_class = [8, 5, 6, 7, 5] #embedded in step 3
+elif args.dataset == FOOD101:
     criteria_choices = ["ingredient", "category"]
+elif args.dataset == PASCALVOC:
+    # TODO: CHANGE THIS
+    criteria_choices = ["", ""]
+elif args.dataset == ADE20K:
+    # TODO: CHANGE THIS
+    criteria_choices = ["", ""]
 else:
     criteria_choices = ["main_object"]
 
@@ -39,9 +49,9 @@ parser.add_argument("--criteria", type=str, default="main_object", choices=crite
 
 # ---model choices
 # for llama
-parser.add_argument("--llama_ver", type=str, default="llama_70b", choices = ["llama_7b", "llama_70b"])
+parser.add_argument("--llama_ver", type=str, default=LLAMA_33_70B, choices = [LLAMA_33_70B, LLAMA31_8B_INSTRUCT])
 # for vlm
-parser.add_argument("--vlm_model", type=str, default="internVl3", choices = ["minicpm", "internVl3"])
+parser.add_argument("--vlm_model", type=str, default=INTERNVL3, choices = [MINICPM_26, INTERNVL3])
 
 args = parser.parse_args()
 
@@ -66,13 +76,13 @@ args.step3_result_path = f"{args.output_path}/step3_result.json"
 # ----- Prompt setting
 # Direction for each prompt
 args.prompt_path = args.specific_dataset_dir
-args.step1_prompt_path = args.prompt_path + f"/step1_prompt_" + args.criteria 
+args.step1_prompt_path = args.prompt_path + f"/step1_prompt" #+ args.criteria 
 args.step1_prompt_path += ".txt"
-args.step2a_prompt_path = args.prompt_path + f"/step2a_prompt_" + args.criteria 
+args.step2a_prompt_path = args.prompt_path + f"/step2a_prompt" #+ args.criteria 
 args.step2a_prompt_path += ".txt"
-args.step2b_prompt_path = args.prompt_path + f"/step2b_prompt_" + args.criteria 
+args.step2b_prompt_path = args.prompt_path + f"/step2b_prompt" #+ args.criteria 
 args.step2b_prompt_path += ".txt"
-args.step3_prompt_path = args.prompt_path + f"/step3_prompt_" + args.criteria 
+args.step3_prompt_path = args.prompt_path + f"/step3_prompt" #+ args.criteria 
 args.step3_prompt_path += ".txt"
 
 
@@ -88,12 +98,11 @@ criteria_index = criteria_choices.index(args.criteria)
 # get corresponding prompt label
 args.prompt_label = prompt_criteria[criteria_index] if criteria_index < len(prompt_criteria) else None
 args.examplar = examplar_criteria[criteria_index] if criteria_index < len(examplar_criteria) else None
+args.num_classes = num_class[criteria_index] if criteria_index < len(num_class) else None
 
 print(f"Selected criteria: {args.criteria} (index {criteria_index})")
 print(f"Prompt label: {args.prompt_label}")
-
-# Define the number of classes for step 3
-if args.dataset == "imagenet":
-    args.num_classes = 8
+print(f"Examplar: {args.examplar}")
+print(f"Num class: {args.num_classes}")
 
 #--------------------------------------------------------------------------------------

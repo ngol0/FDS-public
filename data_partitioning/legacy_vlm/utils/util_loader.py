@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from dataset import BaseDataset
 import math
-
+from utils.constants import FOOD101, INTERNVL3, LLAMA_33_70B, LLAMA31_8B_INSTRUCT , MINICPM_26
 # model and tokenizer
 #----- Load model ----
 # note: change to custom path when run
@@ -66,12 +66,12 @@ def load_internvl3(path):
     
     return model, tokenizer
 
-def load_llm(ver: str = "llama_7b"):
+def load_llm(ver: str = LLAMA_33_70B):
     # Pick the model
-    if (ver == "llama_7b"):
+    if (ver == LLAMA31_8B_INSTRUCT):
         print("Loading LLaMA 3.1-Instruct 7B...")
         model_path = llama_7b_model_dir
-    if (ver == "llama_70b"):
+    if (ver == LLAMA_33_70B):
         print("Loading LLaMA 3.3 70B...")
         model_path = llama_70b_model_dir
 
@@ -90,17 +90,17 @@ def load_llm(ver: str = "llama_7b"):
 
     return model, tokenizer
 
-def load_vlm(choice: str = "minicpm"):
-    """Load the (MiniCPM) model and tokenizer."""
+def load_vlm(choice: str = INTERNVL3):
+    """Load the VLM model and tokenizer."""
     # Pick the model
-    if (choice == "minicpm"):
+    if (choice == MINICPM_26):
         print("Loading MiniCPM 2.6...")
         model_path = minicpm_model_dir
         model = AutoModel.from_pretrained(model_path, trust_remote_code=True, dtype=torch.bfloat16)
         model = model.to(device='cuda', dtype=torch.bfloat16)
         model.eval()
         tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-    if (choice == "internVl3"):
+    if (choice == INTERNVL3):
         print("Loading InternVL3-38B...")
         model_path = internVL3_model_dir
         model, tokenizer = load_internvl3(model_path)
@@ -111,13 +111,13 @@ def load_vlm(choice: str = "minicpm"):
 # note: set to user's custom path when run
 def load_data(dataset: str):
     # Load dataset
-    if dataset == "imagenet":
-        print("Dataset: TinyImagenet")
-        data = BaseDataset("tiny_imagenet", "/users/sbsh771/gtai/FDS", "val")
-    if dataset == "food101":
-        print("Dataset: Food 101")
-        data = BaseDataset("food101", "/users/sbsh771/gtai/FDS", "test")
-    #>>> todo: add other dataset here:
+    path = "/users/sbsh771/gtai/FDS"
+    split = "val"
+    if dataset == FOOD101:
+        split = "test"
+    
+    print("Dataset: ", dataset)
+    data = BaseDataset(dataset, path, split)
 
     return data
 

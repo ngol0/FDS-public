@@ -36,8 +36,8 @@ def main():
     print("2b) === Step 2b...")
     step2b.main(llm_model, llm_tokenizer)
 
-    print("3) === Step 3...")
-    step3.main(llm_model, llm_tokenizer, inference_batch_size=64)
+    #print("3) === Step 3...")
+    #step3.main(llm_model, llm_tokenizer, inference_batch_size=64)
     
     print("Full pipeline finished successfully!")
 

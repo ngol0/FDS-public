@@ -1,1 +1,0 @@
-Describe the image focusing exclusively on [__CRITERION__]. Avoid proper nouns. Answer in ≤40 tokens.

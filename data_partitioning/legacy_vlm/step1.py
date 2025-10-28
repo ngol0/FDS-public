@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dataset import BaseDataset
+from utils.constants import INTERNVL3, MINICPM_26
 
 import torchvision.transforms as T
 from torchvision.transforms.functional import InterpolationMode
@@ -381,9 +382,10 @@ def main(model, tokenizer, data: BaseDataset,
         logger.info(f"Processing batch {batch_num}/{total_batches} ({len(batch)} samples)")
 
         # Different inference method for different model
-        if args.vlm_model == "minicpm":
+        # todo: refactor this to not use if else
+        if args.vlm_model == MINICPM_26:
             batch_results = process_batch_minicpm(model=model, tokenizer=tokenizer, batch_data=batch)
-        if args.vlm_model == "internVl3":
+        if args.vlm_model == INTERNVL3:
             batch_results = process_batch_internvl(model=model, tokenizer=tokenizer, batch_data=batch)
     
         all_results.extend(batch_results)
