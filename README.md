@@ -19,10 +19,14 @@ Default params if not specified:
 ### Output: 
 `data/<dataset_name>/<output_criteria_name_of_experiment>`
 
-I.e: data/imagenet/output_main_object_test
+Example: data/imagenet/output_main_object_test
 
 ### Prompt:
 Prompts for each dataset are set up in a .txt file. They are located in: `data/<dataset_name>`. After running, the prompts for that run are also copied into the output folder.
+
+### Set up: 
+* Model and dataset: In `utils/utils_loader.py`. Edit to user's custom path for VLM/LLM and dataset when run.
+* Criteria for prompt customization: In `utils/argument.py`. 
 
 
 
