@@ -24,7 +24,7 @@ Example: data/tiny_imagenet/output_main_object_test
 ### Prompt:
 Prompts for each dataset are set up in .txt files. They are located in: `data/<dataset_name>`. 
 
-Each step’s prompt is dynamically customized based on the selected criterion. The script automatically embeds the corresponding values from the `criteria_prompt` (all steps), `examplar_criteria` (step 2a), and `num_classes` (step 3) lists defined in `utils/argument.py`, to make sure that each step uses the appropriate wording for the chosen criterion. 
+Each step’s prompt is dynamically customized based on the selected criterion. The script automatically embeds the corresponding values from the `criteria_prompt`, `examplar_criteria`, and `num_classes` lists defined in `utils/argument.py`, to make sure that each step uses the appropriate wording for the chosen criterion. 
 
 After running, the prompts for that run are also copied into the output folder.
 
