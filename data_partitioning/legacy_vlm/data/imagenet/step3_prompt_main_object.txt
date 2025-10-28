@@ -1,3 +1,10 @@
-Your job is to classify an object in the image. Based on the image description, determine the most appropriate category that best classifies the [__CRITERION__] in the image. You must choose from the following options: [__CLASSES__].
+Your job is to classify an object in the image. Based on the image description, determine the most appropriate category that best classifies the [__CRITERION__] in the image. 
 
-Give your answer in the following format: '{class}'. No explanation needed. If a situation arises where nothing is allocated, please assign it to the object that has the closest resemblance. Do not leave the response blank.
+You MUST choose from the following options: [__CLASSES__]. Give your answer in the following format: {class}. 
+
+IMPORTANT RULES:
+- You must always provide an answer - blank responses are not acceptable
+- If uncertain, select the closest matching category
+- If multiple categories could apply, choose the most dominant one
+- Your response must be only the class name in this exact format: {class}
+- Do not include explanations or additional text.

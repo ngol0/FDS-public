@@ -13,18 +13,19 @@ logger = logging.getLogger(__name__)
 
 # ------------------------- Step 3 funcs ------------------------------------------------------
 # ---- Step 1: Prepare prompt ----
-def format_prompt(caption: List[str]) -> str:
-    """Format captions into a prompt asking for exact description."""
+def format_prompt(caption, class_list):
+    """Format captions into a prompt asking for exact description and list of class."""
     return f'''
-    Image description: {caption}
-    Your response:
+Task: Based on the image description, determine the category for the "{args.prompt_label}" in the image. You must choose *ONE* option from this list: {class_list}. If uncertain, select the closest matching category.
+Image description: {caption}
+Your response:
 '''
 
 # --- Build chat prompt using messages format ---
-def build_chat_prompt(model, tokenizer, system_prompt: str, captions: str) -> str:
+def build_chat_prompt(model, tokenizer, system_prompt, class_list, captions):
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": format_prompt(captions)}
+        {"role": "user", "content": format_prompt(captions, class_list)}
     ]
     return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
@@ -52,7 +53,7 @@ def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 
     responses = []
     for output in outputs:
         response = tokenizer.decode(output, skip_special_tokens=True)
-        print("RESPONSE: ", response)
+        #print("RESPONSE: ", response)
         marker = "assistant"  
         idx = response.find(marker)
         if idx != -1:
@@ -101,7 +102,7 @@ def main(model, tokenizer, inference_batch_size: int = 16):
         system_prompt = system_prompt.replace("[__CRITERION__]", str((args.prompt_label).lower()))
 
         prompts = [
-            build_chat_prompt(model, tokenizer, system_prompt, item["description"]) for item in batch]
+            build_chat_prompt(model, tokenizer, system_prompt, class_list, item["description"]) for item in batch]
         
         print(f"Processing batch {i // inference_batch_size + 1}/{(len(data) + inference_batch_size - 1) // inference_batch_size}")
         

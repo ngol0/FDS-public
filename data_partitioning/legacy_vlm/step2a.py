@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # ------------------------- Step 2 funcs ------------------------------------------------------
 # ---- Step 1: Prepare captions in batch----
 def format_prompt(caption: List[str]) -> str:
-    """Format captions into a prompt asking for exact description."""
+    """Format captions into a prompt asking for caption and criteria."""
     return f'''
 Task: Read the image description and respond with one word about the "{args.prompt_label}".
 Image description: "{caption}" 

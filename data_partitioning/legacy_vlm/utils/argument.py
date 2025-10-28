@@ -29,6 +29,7 @@ parser.add_argument("--exp_name", type=str, default="test")
 if args.dataset == "imagenet":
     criteria_choices = ["main_object", "size", "time", "color", "location"]
     prompt_criteria = ["Main Object", "Size and Scale", "Time of day", "Dominant Color", "Location"]
+    examplar_criteria = ["Tree", "Large", "Sun", "Green", "Field"] # embedded in step 2a
 elif args.dataset == "food101":
     criteria_choices = ["ingredient", "category"]
 else:
@@ -86,6 +87,7 @@ shutil.copy(args.step3_prompt_path, f"{args.output_path}/step3_prompt.txt")
 criteria_index = criteria_choices.index(args.criteria)
 # get corresponding prompt label
 args.prompt_label = prompt_criteria[criteria_index] if criteria_index < len(prompt_criteria) else None
+args.examplar = examplar_criteria[criteria_index] if criteria_index < len(examplar_criteria) else None
 
 print(f"Selected criteria: {args.criteria} (index {criteria_index})")
 print(f"Prompt label: {args.prompt_label}")

@@ -9,6 +9,7 @@ import math
 
 # model and tokenizer
 #----- Load model ----
+# note: change to custom path when run
 
 # VLM
 minicpm_model_dir = "/users/sbsh771/archive/vision-saved/minicpm26"
@@ -106,6 +107,8 @@ def load_vlm(choice: str = "minicpm"):
         
     return model, tokenizer
 
+# load data set based on params set when run script
+# note: set to user's custom path when run
 def load_data(dataset: str):
     # Load dataset
     if dataset == "imagenet":

@@ -42,11 +42,11 @@ def post_process(json_path: str):
 # ------------------------- Step 2b funcs ------------------------------------------------------
 # ---- Step 1: Prepare captions in batch----
 def format_prompt(labels, num_of_class) -> str:
-    """Format captions into a prompt asking for exact description."""
+    """Format captions into a prompt."""
     return f'''
-    List of labels: {labels}. 
-    Num_classes: {num_of_class}
-    Your response:
+Task: Cluster these following list of labels into {num_of_class} categories.
+List of labels: {labels}
+Your response:
 '''
 
 # --- Build chat prompt using messages format ---
