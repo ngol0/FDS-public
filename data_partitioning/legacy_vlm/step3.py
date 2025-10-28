@@ -16,8 +16,9 @@ logger = logging.getLogger(__name__)
 def format_prompt(caption, class_list):
     """Format captions into a prompt asking for exact description and list of class."""
     return f'''
-Task: Based on the image description, determine the category for the "{args.prompt_label}" in the image. You must choose *ONE* option from this list: {class_list}. If uncertain, select the closest matching category.
-Image description: {caption}
+Task: Based on the image description, determine the category for the "{args.prompt_label}" in the image. You must choose one option from this list: {class_list}
+
+Image description: "{caption}"
 Your response:
 '''
 
@@ -30,8 +31,10 @@ def build_chat_prompt(model, tokenizer, system_prompt, class_list, captions):
     return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
 # --- Step 2: Query LLaMA model ---
-def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 512) -> List[str]:
+def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 1024) -> List[str]:
     """Process multiple prompts in one batch."""
+
+    tokenizer.padding_side = 'left'
     inputs = tokenizer(
         prompts, 
         return_tensors="pt", 
@@ -44,9 +47,9 @@ def query_llm_batch(model, tokenizer, prompts: List[str], max_new_tokens: int = 
         outputs = model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
-            do_sample=True,
-            temperature=0.2,
-            top_p=0.9,
+            do_sample=False,
+            temperature=None,
+            top_p=None,
             eos_token_id=tokenizer.eos_token_id,
         )
     
