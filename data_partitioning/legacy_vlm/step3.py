@@ -130,4 +130,4 @@ if __name__ == "__main__":
 
     model, tokenizer = util_loader.load_llm(args.llama_ver)
 
-    main(model=model, tokenizer=tokenizer, inference_batch_size=64)
+    main(model=model, tokenizer=tokenizer, inference_batch_size=72)

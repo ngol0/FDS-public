@@ -31,11 +31,13 @@ parser.add_argument("--exp_name", type=str, default="test")
 # ---*** criteria choices and set up (depends on dataset) ***------------------
 if args.dataset == TINY_IMAGENET:
     criteria_choices = ["main_object", "size", "time", "color", "location"]
-    prompt_criteria = ["Main Object", "Size and Scale", "Time of day", "Dominant Color", "Location"]
-    examplar_criteria = ["Tree", "Large", "Sun", "Green", "Field"] # embedded in step 2a
-    num_class = [8, 5, 6, 7, 5] #embedded in step 3
+    prompt_criteria = ["Main Object", "Size and Scale", "Time of day", "Dominant Color", "Location"] # embedded as a criterion in all prompts
+    examplar_criteria = ["Tree", "Large", "Morning", "Green", "Field"] # embedded in step 2a as an example at the end of prompt
+    num_class = [7, 4, 6, 7, 5] #embedded in step 2b & 3 for the num of class for clustering
 elif args.dataset == FOOD101:
-    criteria_choices = ["ingredient", "category"]
+    criteria_choices = ["type", "ingredient", "cuisine", "time", "method"]
+    prompt_criteria = ["Food Type", "Main Ingredient", "Cuisine", "Meal Time", "Cooking Method"] # embedded as a criterion in all prompts
+    num_class = [8, 8, 8, 5, 8] #embedded in step 2b & 3 for the num of class for clustering
 elif args.dataset == PASCALVOC:
     # TODO: CHANGE THIS
     criteria_choices = ["", ""]
