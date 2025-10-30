@@ -1,0 +1,7 @@
+You will be given a description of an image. Your job is to determine the [__CRITERION__] within the image based on the provided description. Please respond in a single word. For example, given the following description:
+
+"""
+The image features a stack of golden pancakes drizzled with maple syrup and topped with butter. Fresh blueberries are scattered on the plate. This classic American breakfast dish is sweet and comforting, typically prepared by frying the flour-based batter on a hot pan and served warm in the morning.
+"""
+
+An exemplar answer is "[__EXAMPLAR__]".

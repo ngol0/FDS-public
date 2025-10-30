@@ -38,17 +38,17 @@ if args.dataset == TINY_IMAGENET:
         1: {"prompt": "Size and Scale", "examplar": "Large", "num_classes": 4},
         2: {"prompt": "Time of day", "examplar": "Morning", "num_classes": 4},
         3: {"prompt": "Dominant Color", "examplar": "Green", "num_classes": 7},
-        4: {"prompt": "Location", "examplar": "Field", "num_classes": 5},
+        4: {"prompt": "Location of the object", "examplar": "Field", "num_classes": 5},
     }
 elif args.dataset == FOOD101:
     criteria_choices = ["type", "ingredient", "cuisine", "time", "method"]
     criteria_config = {
-        #TODO: Input the Examplar
-        0: {"prompt": "Food Type", "examplar": "", "num_classes": 8},
-        1: {"prompt": "Main Ingredient", "examplar": "", "num_classes": 8},
-        2: {"prompt": "Cuisine", "examplar": "", "num_classes": 8},
-        3: {"prompt": "Meal Time", "examplar": "", "num_classes": 5},
-        4: {"prompt": "Cooking Method", "examplar": "", "num_classes": 8},
+    #TODO: Input the Examplar
+        0: {"prompt": "Food Type", "examplar": "Pancake", "num_classes": 8},
+        1: {"prompt": "Main Ingredient", "examplar": "Breakfast", "num_classes": 8},
+        2: {"prompt": "Cuisine", "examplar": "Fried", "num_classes": 8},
+        3: {"prompt": "Meal Time", "examplar": "Flour", "num_classes": 5},
+        4: {"prompt": "Cooking Method", "examplar": "American", "num_classes": 8},
     }
 elif args.dataset == PASCALVOC:
     # TODO: CHANGE THIS
