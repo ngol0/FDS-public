@@ -7,6 +7,7 @@ import logging
 import sys, os
 from utils.argument import args
 from utils import helper
+import string
 
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +31,7 @@ def post_process(json_path: str):
     
     for item in data:
         label = item["label"]
+        label = label.translate(str.maketrans('', '', string.punctuation))
         
         # Count occurrences
         if label not in answer_list:

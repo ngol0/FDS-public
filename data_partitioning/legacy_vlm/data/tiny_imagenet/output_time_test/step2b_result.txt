@@ -1,0 +1,18 @@
+Here are the 4 categories with a representative word for each:
+
+Answer 1: Day
+Answer 2: Night
+Answer 3: Unknown
+Answer 4: Sunset/Dusk
+
+Here are the reasons for each category:
+
+Reason 1: I chose 'Day' as the representative word for the category that includes 'Daytime', 'Day', 'Morning', 'Afternoon' because these words all refer to the daytime period, which is the time of day when the sun is visible in the sky.
+
+Reason 2: I chose 'Night' as the representative word for the category that includes 'Night', 'Nighttime', 'Dusk' because these words all refer to the nighttime period, which is the time of day when the sun is not visible in the sky.
+
+Reason 3: I chose 'Unknown' as the representative word for the category that only includes 'Unknown' because this word refers to a time of day that is not specified or cannot be determined.
+
+Reason 4: I chose 'Evening' as the representative word for the category that includes 'Evening', 'Sunset' because these words both refer to the time of day around sunset, which is the transition period between day and night. 
+
+Note: Although 'Evening' and 'Night' are related, I separated them into two categories because 'Evening' typically refers to a specific time period (around sunset) whereas 'Night' refers to the entire nighttime period.

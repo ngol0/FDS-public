@@ -33,7 +33,7 @@ if args.dataset == TINY_IMAGENET:
     criteria_choices = ["main_object", "size", "time", "color", "location"]
     prompt_criteria = ["Main Object", "Size and Scale", "Time of day", "Dominant Color", "Location"] # embedded as a criterion in all prompts
     examplar_criteria = ["Tree", "Large", "Morning", "Green", "Field"] # embedded in step 2a as an example at the end of prompt
-    num_class = [7, 4, 6, 7, 5] #embedded in step 2b & 3 for the num of class for clustering
+    num_class = [7, 4, 4, 7, 5] #embedded in step 2b & 3 for the num of class for clustering
 elif args.dataset == FOOD101:
     criteria_choices = ["type", "ingredient", "cuisine", "time", "method"]
     prompt_criteria = ["Food Type", "Main Ingredient", "Cuisine", "Meal Time", "Cooking Method"] # embedded as a criterion in all prompts

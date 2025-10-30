@@ -19,7 +19,7 @@ def main():
 
     # Run pipeline
     print("1) === Step 1...")
-    step1.main(vlm_model, vlm_tokenizer, data=data, max_samples=None, batch_size=96)
+    step1.main(vlm_model, vlm_tokenizer, data=data, max_samples=None, batch_size=144)
 
     # Unload vlm here:
     del vlm_model
@@ -37,7 +37,7 @@ def main():
     step2b.main(llm_model, llm_tokenizer)
 
     #print("3) === Step 3...")
-    #step3.main(llm_model, llm_tokenizer, inference_batch_size=96)
+    #step3.main(llm_model, llm_tokenizer, inference_batch_size=80)
     
     print("Full pipeline finished successfully!")
 
