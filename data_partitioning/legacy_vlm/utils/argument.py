@@ -31,13 +31,25 @@ parser.add_argument("--exp_name", type=str, default="test")
 # ---*** criteria choices and set up (depends on dataset) ***------------------
 if args.dataset == TINY_IMAGENET:
     criteria_choices = ["main_object", "size", "time", "color", "location"]
-    prompt_criteria = ["Main Object", "Size and Scale", "Time of day", "Dominant Color", "Location"] # embedded as a criterion in all prompts
-    examplar_criteria = ["Tree", "Large", "Morning", "Green", "Field"] # embedded in step 2a as an example at the end of prompt
-    num_class = [7, 4, 4, 7, 5] #embedded in step 2b & 3 for the num of class for clustering
+    # prompt: embedded as a criterion in all prompts
+    # examplar: in step 2a, num_class: embedded in step 2b & 3 for the num of class for clustering
+    criteria_config = {
+        0: {"prompt": "Main Object", "examplar": "Tree", "num_classes": 7},
+        1: {"prompt": "Size and Scale", "examplar": "Large", "num_classes": 4},
+        2: {"prompt": "Time of day", "examplar": "Morning", "num_classes": 4},
+        3: {"prompt": "Dominant Color", "examplar": "Green", "num_classes": 7},
+        4: {"prompt": "Location", "examplar": "Field", "num_classes": 5},
+    }
 elif args.dataset == FOOD101:
     criteria_choices = ["type", "ingredient", "cuisine", "time", "method"]
-    prompt_criteria = ["Food Type", "Main Ingredient", "Cuisine", "Meal Time", "Cooking Method"] # embedded as a criterion in all prompts
-    num_class = [8, 8, 8, 5, 8] #embedded in step 2b & 3 for the num of class for clustering
+    criteria_config = {
+        #TODO: Input the Examplar
+        0: {"prompt": "Food Type", "examplar": "", "num_classes": 8},
+        1: {"prompt": "Main Ingredient", "examplar": "", "num_classes": 8},
+        2: {"prompt": "Cuisine", "examplar": "", "num_classes": 8},
+        3: {"prompt": "Meal Time", "examplar": "", "num_classes": 5},
+        4: {"prompt": "Cooking Method", "examplar": "", "num_classes": 8},
+    }
 elif args.dataset == PASCALVOC:
     # TODO: CHANGE THIS
     criteria_choices = ["", ""]
@@ -98,9 +110,15 @@ shutil.copy(args.step3_prompt_path, f"{args.output_path}/step3_prompt.txt")
 # find index of the chosen criteria
 criteria_index = criteria_choices.index(args.criteria)
 # get corresponding prompt label
-args.prompt_label = prompt_criteria[criteria_index] if criteria_index < len(prompt_criteria) else None
-args.examplar = examplar_criteria[criteria_index] if criteria_index < len(examplar_criteria) else None
-args.num_classes = num_class[criteria_index] if criteria_index < len(num_class) else None
+config = criteria_config.get(criteria_index, None)
+if config:
+    args.prompt_label = config["prompt"]
+    args.examplar = config["examplar"]
+    args.num_classes = config["num_classes"]
+else:
+    args.prompt_label = None
+    args.examplar = None
+    args.num_classes = None
 
 print(f"Selected criteria: {args.criteria} (index {criteria_index})")
 print(f"Prompt label: {args.prompt_label}")

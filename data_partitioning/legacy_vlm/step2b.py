@@ -117,6 +117,7 @@ def main(model, tokenizer):
     system_prompt = helper.read_file_to_string(args.step2b_prompt_path)
     system_prompt = system_prompt.replace("[__NUM_CLASSES_CLUSTER__]", str(args.num_classes))
     system_prompt = system_prompt.replace("[__LEN__]", str(len(label_counts)))
+    system_prompt = system_prompt.replace("[__CRITERION__]", str(args.prompt_label.lower()))
 
     prompt = build_chat_prompt(model, tokenizer, system_prompt, label_counts, args.num_classes)
     response = query_llm(model, tokenizer, prompt, max_new_tokens=500)
