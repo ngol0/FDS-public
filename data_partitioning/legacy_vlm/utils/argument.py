@@ -5,7 +5,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from time import strftime, localtime
 from utils.constants import TINY_IMAGENET, FOOD101, PASCALVOC, ADE20K
-from utils.constants import INTERNVL3, LLAMA_33_70B, LLAMA31_8B_INSTRUCT , MINICPM_26
+from utils.constants import INTERNVL3_38B, INTERNVL3_5_8B, LLAMA_33_70B, LLAMA31_8B_INSTRUCT , MINICPM_26
 
 
 def str2bool(v):
@@ -38,17 +38,17 @@ if args.dataset == TINY_IMAGENET:
         1: {"prompt": "Size and Scale", "examplar": "Large", "num_classes": 4},
         2: {"prompt": "Time of day", "examplar": "Morning", "num_classes": 4},
         3: {"prompt": "Dominant Color", "examplar": "Green", "num_classes": 7},
-        4: {"prompt": "Location of the object", "examplar": "Field", "num_classes": 5},
+        4: {"prompt": "Location", "examplar": "Field", "num_classes": 5},
     }
 elif args.dataset == FOOD101:
     criteria_choices = ["type", "ingredient", "cuisine", "time", "method"]
     criteria_config = {
     #TODO: Input the Examplar
         0: {"prompt": "Food Type", "examplar": "Pancake", "num_classes": 8},
-        1: {"prompt": "Main Ingredient", "examplar": "Breakfast", "num_classes": 8},
-        2: {"prompt": "Cuisine", "examplar": "Fried", "num_classes": 8},
-        3: {"prompt": "Meal Time", "examplar": "Flour", "num_classes": 5},
-        4: {"prompt": "Cooking Method", "examplar": "American", "num_classes": 8},
+        1: {"prompt": "Main Ingredient", "examplar": "Flour", "num_classes": 8},
+        2: {"prompt": "Cuisine", "examplar": "American", "num_classes": 8},
+        3: {"prompt": "Meal Time", "examplar": "Breakfast", "num_classes": 5},
+        4: {"prompt": "Cooking Method", "examplar": "Fried", "num_classes": 8},
     }
 elif args.dataset == PASCALVOC:
     # TODO: CHANGE THIS
@@ -65,7 +65,7 @@ parser.add_argument("--criteria", type=str, default="main_object", choices=crite
 # for llama
 parser.add_argument("--llama_ver", type=str, default=LLAMA_33_70B, choices = [LLAMA_33_70B, LLAMA31_8B_INSTRUCT])
 # for vlm
-parser.add_argument("--vlm_model", type=str, default=INTERNVL3, choices = [MINICPM_26, INTERNVL3])
+parser.add_argument("--vlm_model", type=str, default=INTERNVL3_5_8B, choices = [MINICPM_26, INTERNVL3_5_8B, INTERNVL3_38B])
 
 args = parser.parse_args()
 

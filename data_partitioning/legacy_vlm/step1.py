@@ -1,4 +1,4 @@
-import torch
+import gc, torch
 import os
 import json
 from datasets import Dataset
@@ -12,8 +12,11 @@ from PIL import Image
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# import os
+# os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+
 from dataset import BaseDataset
-from utils.constants import INTERNVL3, MINICPM_26
+from utils.constants import INTERNVL3_38B, INTERNVL3_5_8B, MINICPM_26
 
 import torchvision.transforms as T
 from torchvision.transforms.functional import InterpolationMode
@@ -81,22 +84,11 @@ def dynamic_preprocess(image, min_num=1, max_num=12, image_size=448, use_thumbna
         processed_images.append(thumbnail_img)
     return processed_images
 
-def load_image(image, input_size=448, max_num=12):
-    """
-    Load image for InternVL3
-    Args:
-        image: PIL Image or path string
-        input_size: input image size
-        max_num: maximum number of tiles
-    """
-    if isinstance(image, str):
-        image = Image.open(image).convert('RGB')
-    else:
-        image = image.convert('RGB')
-    
+def load_image(image_file, input_size=448, max_num=12):
+    image = Image.open(image_file).convert('RGB')
     transform = build_transform(input_size=input_size)
     images = dynamic_preprocess(image, image_size=input_size, use_thumbnail=True, max_num=max_num)
-    pixel_values = [transform(img) for img in images]
+    pixel_values = [transform(image) for image in images]
     pixel_values = torch.stack(pixel_values)
     return pixel_values
 
@@ -111,6 +103,12 @@ def load_image(image, input_size=448, max_num=12):
 # ----- Configure logging -----------------
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def print_gpu_memory():
+    for i in range(torch.cuda.device_count()):
+        allocated = torch.cuda.memory_allocated(i) / 1024**3
+        reserved = torch.cuda.memory_reserved(i) / 1024**3
+        print(f"GPU {i}: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved")
 
 # ------- Main VLM pipeline functions -------------
 # STEP 1: Prepare batch question, questions passed in, read from txt file
@@ -132,30 +130,16 @@ def prepare_batch_questions(data: Dataset,
     """
     questions = []
     processed_count = 0
-    
-    # # ---- For TinyImagenet -----
+
     for i in range(len(data.data)):
         if max_samples and processed_count >= max_samples:
             break
         
         image_path = data.data[i] 
         label = data.labels[i]
-
-        with Image.open(image_path) as image:
-            image_copy = image.copy()
-
-        # Skip grayscale images if requested
-        if convert_to_RGB and image_copy.mode != 'RGB':
-            logger.info(f"Converting grayscale image at index {i}")
-            image_copy = image_copy.convert('RGB')
-            #continue
-        
-        # Prepare question in the required format (used for MiniCPM)
-        question_batch = [{"role": "user", "content": [image_copy, question]}]
         
         questions.append({
-            'question': question_batch,
-            'image': image_copy,
+            'question': question,
             'label': label,
             'index': i,
             'filename': image_path,  # Original path
@@ -203,46 +187,6 @@ def process_questions_batch_minicpm(questions: List[List[Dict[str, Any]]], model
         raise e
 
 # ----- Error handling for batch, used only when batch processing failed ------
-def process_individually_minicpm(batch_data: List[Dict[str, Any]], model, tokenizer, 
-                         temperature: float, sampling: bool) -> List[Dict[str, str]]:
-    """Fallback method to process questions individually."""
-    results = []
-    
-    for item in batch_data:
-        try:
-            question = item['question']
-            image = question[0]['content'][0]
-            text_question = question[0]['content'][1]
-            
-            msgs = [{'role': 'user', 'content': text_question}]
-            
-            res, context, _ = model.chat(
-                image=image,
-                msgs=msgs,
-                context=None,
-                tokenizer=tokenizer,
-                sampling=sampling,
-                temperature=temperature
-            )
-            
-            results.append({
-                "image": item['filename'],
-                "label": item['label'],
-                "description": res,
-                "original_index": item['index']
-            })
-            
-        except Exception as e:
-            logger.error(f"Error processing individual item {item['index']}: {e}")
-            results.append({
-                "image": item['filename'],
-                "label": item['label'],
-                "description": f"Error: {str(e)}",
-                "original_index": item['index']
-            })
-            
-    return results
-
 def process_batch_minicpm(model, tokenizer, batch_data: List[Dict[str, Any]], 
                   temperature: float = 0.7, sampling: bool = True) -> List[Dict[str, str]]:
     """
@@ -258,8 +202,18 @@ def process_batch_minicpm(model, tokenizer, batch_data: List[Dict[str, Any]],
     """
     results = []
     
-    # Extract questions for batch processing
-    questions = [item['question'] for item in batch_data]
+    # Load images and reconstruct questions for batch processing
+    questions = []
+    for item in batch_data:
+        # Load the actual image
+        pil_image = Image.open(item['filename']).convert('RGB')
+        
+        # Get question text
+        question_text = item['question']
+        
+        # Reconstruct question with real image
+        question_batch = [{"role": "user", "content": [pil_image, question_text]}]
+        questions.append(question_batch)
     
     try:
         # Process batch using batch API
@@ -282,52 +236,46 @@ def process_batch_minicpm(model, tokenizer, batch_data: List[Dict[str, Any]],
             })
             
     except Exception as e:
-        logger.error(f"Batch processing failed, falling back to individual processing: {e}")
-        # Fallback to individual processing
-        results = process_individually_minicpm(batch_data, model, tokenizer, temperature, sampling)
+        logger.error(f"Batch processing failed...: {e}")
         
     return results
 
 # ------------ For InternVL3 --------------------------------
 def process_batch_internvl(model, tokenizer, batch_data):
     """Process with InternVL in batch"""
+    print_gpu_memory()
     results = []
     generation_config = dict(max_new_tokens=512, do_sample=False)
-    # Load and process all images in the batch
     pixel_values_list = []
     num_patches_list = []
-    questions = []
 
-    for batch_item in batch_data:
-        # Extract question text
-        question_text = batch_item['question'][0]['content'][1]
-        pil_image = batch_item['image']
-        
+    # Load and process all images in the batch
+    for batch_item in batch_data:    
         # Load image
-        pixel_values = load_image(pil_image, input_size=448, max_num=12).to(torch.bfloat16).cuda()
+        pixel_values = load_image(batch_item['filename'], input_size=448, max_num=12).to(torch.bfloat16).cuda()
         
         # Track number of patches
         num_patches_list.append(pixel_values.size(0))
         pixel_values_list.append(pixel_values)
-        
-        # Prepare question with <image> token
-        if '<image>' not in question_text:
-            question_with_image = f'<image>\n{question_text}'
-        else:
-            question_with_image = question_text
-        
-        questions.append(question_with_image)
-        
+
     # Concatenate all pixel values
-    pixel_values = torch.cat(pixel_values_list, dim=0)
+    pixel_values = torch.cat(pixel_values_list, dim=0).cuda()
+
+    # Extract question text
+    question_text = batch_data[0]['question']
+    question_with_image = f'<image>\n{question_text}'
+    questions = [question_with_image] * len(num_patches_list)
     
     # Batch inference
-    responses = model.batch_chat(
-        tokenizer, 
-        pixel_values,
-        num_patches_list=num_patches_list,
-        questions=questions,
-        generation_config=generation_config)
+    with torch.no_grad():
+        responses = model.batch_chat(
+            tokenizer, 
+            pixel_values,
+            num_patches_list=num_patches_list,
+            questions=questions,
+            generation_config=generation_config)
+
+    print_gpu_memory()
 
     # Combine results with metadata
     for i, (batch_item, response) in enumerate(zip(batch_data, responses)):
@@ -339,6 +287,7 @@ def process_batch_internvl(model, tokenizer, batch_data):
 
     # Cleanup
     del pixel_values, pixel_values_list
+    gc.collect()
     torch.cuda.empty_cache()
 
     return results
@@ -385,7 +334,7 @@ def main(model, tokenizer, data: BaseDataset,
         # todo: refactor this to not use if else
         if args.vlm_model == MINICPM_26:
             batch_results = process_batch_minicpm(model=model, tokenizer=tokenizer, batch_data=batch)
-        if args.vlm_model == INTERNVL3:
+        if args.vlm_model == INTERNVL3_5_8B or args.vlm_model == INTERNVL3_38B:
             batch_results = process_batch_internvl(model=model, tokenizer=tokenizer, batch_data=batch)
     
         all_results.extend(batch_results)
@@ -409,7 +358,7 @@ if __name__ == "__main__":
     data = util_loader.load_data(args.dataset)
     
     # Process dataset
-    main(model=model, tokenizer=tokenizer, data=data, max_samples=None, batch_size=64)
+    main(model=model, tokenizer=tokenizer, data=data, max_samples=None, batch_size=16)
 
 
 
