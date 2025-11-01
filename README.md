@@ -1,4 +1,4 @@
-# TODO
+# Instructions
 
 ## VLM pipeline
 
@@ -30,7 +30,9 @@ After running, the prompts for that run are also copied into the output folder.
 
 ### Set up: 
 * Model and dataset: In `utils/utils_loader.py`. Edit to user's custom path for VLM/LLM and dataset when run.
-* Arguments settings: In `utils/argument.py`. 
+* Arguments settings: In `utils/argument.py`.
+
+## Embedding pipeline (Update later..)
 
 
 
